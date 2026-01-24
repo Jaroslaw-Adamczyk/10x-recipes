@@ -1,0 +1,103 @@
+import type { Enums, Tables } from "./db/database.types";
+
+export type RecipeStatus = Enums<"recipe_status">;
+
+type Recipe = Tables<"recipes">;
+type RecipeIngredient = Tables<"recipe_ingredients">;
+type RecipeStep = Tables<"recipe_steps">;
+type RecipeImport = Tables<"recipe_imports">;
+type RecipeRevision = Tables<"recipe_revisions">;
+type AuthEventLog = Tables<"auth_event_logs">;
+
+// DTOs
+export type RecipeDto = Recipe;
+export type RecipeIngredientDto = RecipeIngredient;
+export type RecipeStepDto = RecipeStep;
+export type RecipeImportDto = Omit<RecipeImport, "user_id">;
+export type RecipeRevisionDto = RecipeRevision;
+export type AuthEventLogDto = AuthEventLog;
+
+export type RecipeListItemDto = Pick<
+  Recipe,
+  "id" | "title" | "status" | "error_message" | "created_at" | "updated_at"
+> & {
+  // Derived server-side from ingredient names.
+  ingredients_preview: string[];
+};
+
+export interface RecipeDetailDto {
+  recipe: RecipeDto;
+  ingredients: RecipeIngredientDto[];
+  steps: RecipeStepDto[];
+  import: RecipeImportDto | null;
+}
+
+export interface RecipeCreateResultDto {
+  recipe: RecipeDto;
+  ingredients: RecipeIngredientDto[];
+  steps: RecipeStepDto[];
+}
+
+export type RecipeUpdateResultDto = RecipeCreateResultDto;
+
+export interface RecipeImportListDto {
+  data: RecipeImportDto[];
+  next_cursor: string | null;
+}
+
+export interface RecipeListDto {
+  data: RecipeListItemDto[];
+  next_cursor: string | null;
+}
+
+export interface RecipeRevisionListDto {
+  data: RecipeRevisionDto[];
+  next_cursor: string | null;
+}
+
+export interface AuthEventLogListDto {
+  data: AuthEventLogDto[];
+  next_cursor: string | null;
+}
+
+// Command Models
+export type RecipeImportCreateCommand = Pick<RecipeImport, "source_url">;
+
+export type RecipeIngredientCreateCommand = Pick<RecipeIngredient, "raw_text" | "normalized_name" | "position">;
+
+export type RecipeStepCreateCommand = Pick<RecipeStep, "step_text" | "position">;
+
+export type RecipeCreateCommand = Pick<Recipe, "title" | "cook_time_minutes" | "source_url"> & {
+  ingredients: RecipeIngredientCreateCommand[];
+  steps: RecipeStepCreateCommand[];
+};
+
+export type RecipeIngredientUpsertCommand = RecipeIngredientCreateCommand & {
+  // Null or undefined indicates a new ingredient.
+  id?: RecipeIngredient["id"] | null;
+};
+
+export type RecipeStepUpsertCommand = RecipeStepCreateCommand & {
+  // Null or undefined indicates a new step.
+  id?: RecipeStep["id"] | null;
+};
+
+export type RecipeUpdateCommand = Partial<Pick<Recipe, "title" | "cook_time_minutes" | "prep_time_minutes">> & {
+  ingredients?: RecipeIngredientUpsertCommand[];
+  steps?: RecipeStepUpsertCommand[];
+};
+
+export interface RecipeImportListQuery {
+  status?: RecipeStatus;
+  limit?: number;
+  cursor?: string;
+  sort?: string;
+}
+
+export interface RecipeListQuery {
+  status?: RecipeStatus;
+  q?: string;
+  limit?: number;
+  cursor?: string;
+  sort?: string;
+}
