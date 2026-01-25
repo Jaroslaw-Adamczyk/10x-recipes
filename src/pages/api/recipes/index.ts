@@ -3,6 +3,8 @@ import { z } from "zod";
 
 import type { RecipeCreateError } from "../../../lib/services/recipes/createRecipe";
 import { createRecipe } from "../../../lib/services/recipes/createRecipe";
+import type { RecipeListError } from "../../../lib/services/recipes/listRecipes";
+import { listRecipes } from "../../../lib/services/recipes/listRecipes";
 import type { RecipeCreateCommand } from "../../../types";
 
 export const prerender = false;
@@ -24,6 +26,11 @@ const recipeCreateSchema = z.object({
   source_url: z.union([z.string().url("Invalid source_url."), z.null()]).optional(),
   ingredients: z.array(ingredientSchema).min(1, "At least one ingredient is required."),
   steps: z.array(stepSchema).min(1, "At least one step is required."),
+});
+
+const recipeListQuerySchema = z.object({
+  status: z.enum(["processing", "succeeded", "failed"]).optional(),
+  q: z.string().trim().min(1, "Query must not be empty.").optional(),
 });
 
 const jsonResponse = (status: number, body: unknown) =>
@@ -87,5 +94,46 @@ export const POST: APIRoute = async ({ request, locals }) => {
     // eslint-disable-next-line no-console
     console.error("Unexpected error creating recipe", error);
     return jsonResponse(500, { error: "Unexpected error creating recipe." });
+  }
+};
+
+export const GET: APIRoute = async ({ request, locals }) => {
+  const supabase = locals.supabase;
+  const devUserId = import.meta.env.DEV_USER_ID;
+  // Auth is temporarily disabled for development.
+  // const { data, error } = await supabase.auth.getUser();
+  //
+  // if (error || !data.user) {
+  //   return jsonResponse(401, { error: "Unauthorized." });
+  // }
+
+  const url = new URL(request.url);
+  const qParam = url.searchParams.get("q") ?? undefined;
+  const rawQuery = {
+    status: url.searchParams.get("status") ?? undefined,
+    q: qParam?.trim() ? qParam : undefined,
+  };
+
+  const parsed = recipeListQuerySchema.safeParse(rawQuery);
+  if (!parsed.success) {
+    return jsonResponse(400, {
+      error: parsed.error.issues[0]?.message ?? "Invalid query parameters.",
+    });
+  }
+
+  const userId = devUserId ?? "00000000-0000-0000-0000-000000000000";
+
+  try {
+    const result = await listRecipes(supabase, userId, parsed.data);
+    return jsonResponse(200, result);
+  } catch (error) {
+    const listError = error as RecipeListError | undefined;
+    if (listError?.code) {
+      return jsonResponse(500, { error: listError.message });
+    }
+
+    // eslint-disable-next-line no-console
+    console.error("Unexpected error listing recipes", error);
+    return jsonResponse(500, { error: "Unexpected error listing recipes." });
   }
 };
