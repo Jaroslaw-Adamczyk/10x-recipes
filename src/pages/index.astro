@@ -1,8 +1,48 @@
 ---
-import Welcome from "../components/Welcome.astro";
+import { z } from "zod";
+
 import Layout from "../layouts/Layout.astro";
+import RecipeListView from "../components/recipes/RecipeListView";
+import type { RecipeListDto, RecipeListQuery } from "../types";
+
+const statusSchema = z.enum(["processing", "succeeded", "failed"]);
+const rawQuery = Astro.url.searchParams.get("q") ?? "";
+const rawStatus = Astro.url.searchParams.get("status") ?? "";
+
+const query: RecipeListQuery = {};
+const normalizedQuery = rawQuery.trim().toLowerCase();
+
+if (normalizedQuery) {
+  query.q = normalizedQuery;
+}
+
+const statusResult = statusSchema.safeParse(rawStatus);
+if (statusResult.success) {
+  query.status = statusResult.data;
+}
+
+const listUrl = new URL("/api/recipes", Astro.url);
+if (query.q) {
+  listUrl.searchParams.set("q", query.q);
+}
+if (query.status) {
+  listUrl.searchParams.set("status", query.status);
+}
+
+let initialList: RecipeListDto = { data: [], next_cursor: null };
+
+try {
+  const response = await fetch(listUrl);
+  if (response.ok) {
+    initialList = (await response.json()) as RecipeListDto;
+  }
+} catch {
+  // Fall back to empty list; errors handled client-side.
+}
 ---
 
-<Layout>
-  <Welcome />
+<Layout title="Recipes">
+  <main class="mx-auto flex w-full max-w-5xl flex-col gap-8 px-6 py-10">
+    <RecipeListView initialList={initialList} client:load />
+  </main>
 </Layout>
