@@ -1,0 +1,48 @@
+---
+import { z } from "zod";
+import Layout from "../../layouts/Layout.astro";
+import RecipeDetailView from "../../components/recipes/RecipeDetailView";
+import type { RecipeDetailDto } from "../../types";
+
+const idSchema = z.string().uuid("Recipe id must be a valid UUID.");
+const { id } = Astro.params;
+const recipeId = id ?? "";
+
+let initialDetail: RecipeDetailDto | null = null;
+let errorMessage: string | null = null;
+let notFound = false;
+
+if (!id || !idSchema.safeParse(id).success) {
+  notFound = true;
+  errorMessage = "Recipe not found.";
+} else {
+  const response = await fetch(new URL(`/api/recipes/${id}`, Astro.url));
+
+  if (response.ok) {
+    initialDetail = (await response.json()) as RecipeDetailDto;
+  } else if (response.status === 400 || response.status === 404) {
+    notFound = true;
+    errorMessage = "Recipe not found.";
+  } else {
+    errorMessage = "Unable to load recipe details. Please try again later.";
+  }
+}
+---
+
+<Layout title="Recipe Details">
+  <main class="mx-auto flex w-full max-w-4xl flex-col gap-6 px-6 py-10">
+    {
+      notFound || !initialDetail ? (
+        <section class="rounded-lg border border-border bg-card p-6 text-card-foreground">
+          <h1 class="text-xl font-semibold">Recipe not found</h1>
+          <p class="mt-2 text-sm text-muted-foreground">{errorMessage}</p>
+          <a class="mt-4 inline-flex text-sm font-medium text-primary hover:underline" href="/">
+            Back to recipes
+          </a>
+        </section>
+      ) : (
+        <RecipeDetailView initialDetail={initialDetail} recipeId={recipeId} client:load />
+      )
+    }
+  </main>
+</Layout>
