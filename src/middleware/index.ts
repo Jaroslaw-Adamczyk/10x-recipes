@@ -20,23 +20,32 @@ export const onRequest = defineMiddleware(async (context, next) => {
     headers: context.request.headers,
   });
 
-  // Get session (this also handles token refresh internally)
+  // Get authenticated user (verifies with Supabase Auth server)
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
   // Set context.locals for easy access in pages/API routes
   context.locals.supabase = supabase;
-  context.locals.session = session;
-  context.locals.user = session?.user ?? null;
+  context.locals.session = null; // Not used - we use context.locals.user instead
+  context.locals.user = user ?? null;
 
   // Skip auth check for public paths
   if (PUBLIC_PATHS.includes(context.url.pathname)) {
     return next();
   }
 
-  // Redirect to login for protected routes if no session
-  if (!session) {
+  // Handle authentication for protected routes
+  if (!user) {
+    // For API routes, return 401 JSON response instead of redirecting
+    if (context.url.pathname.startsWith("/api/")) {
+      return new Response(JSON.stringify({ error: "Unauthorized." }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    // For page routes, redirect to login
     return context.redirect(`/auth/login?redirectTo=${encodeURIComponent(context.url.pathname)}`);
   }
 
