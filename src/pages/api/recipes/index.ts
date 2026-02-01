@@ -43,13 +43,15 @@ const jsonResponse = (status: number, body: unknown) =>
 
 export const POST: APIRoute = async ({ request, locals }) => {
   const supabase = locals.supabase;
-  const devUserId = import.meta.env.DEV_USER_ID;
-  // Auth is temporarily disabled for development.
-  // const { data, error } = await supabase.auth.getUser();
-  //
-  // if (error || !data.user) {
-  //   return jsonResponse(401, { error: "Unauthorized." });
-  // }
+
+  // Get authenticated user
+  const { data, error } = await supabase.auth.getUser();
+
+  if (error || !data.user) {
+    return jsonResponse(401, { error: "Unauthorized." });
+  }
+
+  const userId = data.user.id;
 
   let payload: unknown;
   try {
@@ -77,7 +79,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
   };
 
   try {
-    const userId = devUserId ?? "00000000-0000-0000-0000-000000000000";
     const result = await createRecipe(supabase, userId, command);
 
     return jsonResponse(201, result);
@@ -99,13 +100,20 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
 export const GET: APIRoute = async ({ request, locals }) => {
   const supabase = locals.supabase;
-  const devUserId = import.meta.env.DEV_USER_ID;
-  // Auth is temporarily disabled for development.
-  // const { data, error } = await supabase.auth.getUser();
-  //
-  // if (error || !data.user) {
-  //   return jsonResponse(401, { error: "Unauthorized." });
-  // }
+
+  // Get authenticated user
+  const { data, error } = await supabase.auth.getUser();
+
+  if (error || !data.user) {
+    return jsonResponse(401, { error: "Unauthorized." });
+  }
+
+  const userId = data.user.id;
+
+  // Validate user ID format (UUID v4)
+  if (!userId || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId)) {
+    return jsonResponse(401, { error: "Invalid user ID." });
+  }
 
   const url = new URL(request.url);
   const qParam = url.searchParams.get("q") ?? undefined;
@@ -120,8 +128,6 @@ export const GET: APIRoute = async ({ request, locals }) => {
       error: parsed.error.issues[0]?.message ?? "Invalid query parameters.",
     });
   }
-
-  const userId = devUserId ?? "00000000-0000-0000-0000-000000000000";
 
   try {
     const result = await listRecipes(supabase, userId, parsed.data);

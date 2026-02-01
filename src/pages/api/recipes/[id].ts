@@ -50,13 +50,11 @@ const jsonResponse = (status: number, body: unknown) =>
 
 export const DELETE: APIRoute = async ({ locals, params }) => {
   const supabase = locals.supabase;
-  const devUserId = import.meta.env.DEV_USER_ID;
-  // Auth is temporarily disabled for development.
-  // const { data, error } = await supabase.auth.getUser();
-  //
-  // if (error || !data.user) {
-  //   return jsonResponse(401, { error: "Unauthorized." });
-  // }
+  const { data, error } = await supabase.auth.getUser();
+
+  if (error || !data.user) {
+    return jsonResponse(401, { error: "Unauthorized." });
+  }
 
   const parsed = paramsSchema.safeParse(params);
   if (!parsed.success) {
@@ -65,7 +63,7 @@ export const DELETE: APIRoute = async ({ locals, params }) => {
     });
   }
 
-  const userId = devUserId ?? "00000000-0000-0000-0000-000000000000";
+  const userId = data.user.id;
 
   try {
     await deleteRecipe(supabase, userId, parsed.data.id);
@@ -88,13 +86,11 @@ export const DELETE: APIRoute = async ({ locals, params }) => {
 
 export const GET: APIRoute = async ({ locals, params }) => {
   const supabase = locals.supabase;
-  const devUserId = import.meta.env.DEV_USER_ID;
-  // Auth is temporarily disabled for development.
-  // const { data, error } = await supabase.auth.getUser();
-  //
-  // if (error || !data.user) {
-  //   return jsonResponse(401, { error: "Unauthorized." });
-  // }
+  const { data, error } = await supabase.auth.getUser();
+
+  if (error || !data.user) {
+    return jsonResponse(401, { error: "Unauthorized." });
+  }
 
   const parsed = paramsSchema.safeParse(params);
   if (!parsed.success) {
@@ -103,7 +99,7 @@ export const GET: APIRoute = async ({ locals, params }) => {
     });
   }
 
-  const userId = devUserId ?? "00000000-0000-0000-0000-000000000000";
+  const userId = data.user.id;
 
   try {
     const result = await getRecipeDetail(supabase, userId, parsed.data.id);
@@ -126,13 +122,11 @@ export const GET: APIRoute = async ({ locals, params }) => {
 
 export const PATCH: APIRoute = async ({ locals, params, request }) => {
   const supabase = locals.supabase;
-  const devUserId = import.meta.env.DEV_USER_ID;
-  // Auth is temporarily disabled for development.
-  // const { data, error } = await supabase.auth.getUser();
-  //
-  // if (error || !data.user) {
-  //   return jsonResponse(401, { error: "Unauthorized." });
-  // }
+  const { data, error } = await supabase.auth.getUser();
+
+  if (error || !data.user) {
+    return jsonResponse(401, { error: "Unauthorized." });
+  }
 
   const parsedParams = paramsSchema.safeParse(params);
   if (!parsedParams.success) {
@@ -155,7 +149,7 @@ export const PATCH: APIRoute = async ({ locals, params, request }) => {
     });
   }
 
-  const userId = devUserId ?? "00000000-0000-0000-0000-000000000000";
+  const userId = data.user.id;
   const body = parsedBody.data;
 
   const command: RecipeUpdateCommand = {};

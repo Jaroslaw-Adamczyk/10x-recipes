@@ -24,13 +24,11 @@ const jsonResponse = (status: number, body: unknown) =>
  */
 export const POST: APIRoute = async ({ request, locals }) => {
   const supabase = locals.supabase;
-  const devUserId = import.meta.env.DEV_USER_ID;
-  // Auth is temporarily disabled for development.
-  // const { data, error } = await supabase.auth.getUser();
-  //
-  // if (error || !data.user) {
-  //   return jsonResponse(401, { error: "Unauthorized." });
-  // }
+  const { data, error } = await supabase.auth.getUser();
+
+  if (error || !data.user) {
+    return jsonResponse(401, { error: "Unauthorized." });
+  }
 
   let payload: unknown;
   try {
@@ -50,7 +48,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     source_url: parsed.data.source_url,
   };
 
-  const userId = devUserId ?? "00000000-0000-0000-0000-000000000000";
+  const userId = data.user.id;
 
   try {
     const result = await createRecipeImport(supabase, userId, command);
