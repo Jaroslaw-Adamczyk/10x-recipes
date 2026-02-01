@@ -54,8 +54,16 @@ export function LoginForm({ redirectTo = "/", initialError }: LoginFormProps) {
       const data = await response.json();
 
       if (!response.ok) {
+        // Handle Zod array-based field errors
         if (data.error?.fields) {
-          setErrors(data.error.fields);
+          const fieldErrors: Record<string, string> = {};
+          Object.entries(data.error.fields).forEach(([key, value]) => {
+            // Zod returns arrays of error messages, take the first one
+            if (Array.isArray(value) && value.length > 0) {
+              fieldErrors[key] = value[0];
+            }
+          });
+          setErrors(fieldErrors);
         }
         setFormError(data.error?.message || "Unable to connect. Please try again.");
         setIsLoading(false);
@@ -124,7 +132,7 @@ export function LoginForm({ redirectTo = "/", initialError }: LoginFormProps) {
         <CardFooter className="flex flex-col space-y-4">
           <SubmitButton label="Login" loadingLabel="Logging in..." isLoading={isLoading} />
           <p className="text-sm text-muted-foreground text-center">
-            Don't have an account?{" "}
+            Don&apos;t have an account?{" "}
             <a href="/auth/register" className="text-primary hover:underline font-medium">
               Register here
             </a>

@@ -6,8 +6,10 @@ import { LoginForm } from "@/components/auth/LoginForm";
 const redirectTo = Astro.url.searchParams.get("redirectTo") || "/";
 const error = Astro.url.searchParams.get("error") || undefined;
 
-// Note: Session check will be implemented when backend is ready
-// For now, this is just the UI implementation
+// Check if user is already authenticated
+if (Astro.locals.session) {
+  return Astro.redirect(redirectTo);
+}
 ---
 
 <Layout title="Login - 10x Recipes">
