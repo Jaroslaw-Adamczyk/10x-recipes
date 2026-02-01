@@ -1,0 +1,17 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import { LoginForm } from "@/components/auth/LoginForm";
+
+// Get query parameters
+const redirectTo = Astro.url.searchParams.get("redirectTo") || "/";
+const error = Astro.url.searchParams.get("error") || undefined;
+
+// Note: Session check will be implemented when backend is ready
+// For now, this is just the UI implementation
+---
+
+<Layout title="Login - 10x Recipes">
+  <main class="min-h-screen flex items-center justify-center p-4 bg-muted/30">
+    <LoginForm client:load redirectTo={redirectTo} initialError={error} />
+  </main>
+</Layout>
