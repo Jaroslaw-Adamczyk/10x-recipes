@@ -60,6 +60,53 @@ export interface AuthEventLogListDto {
   next_cursor: string | null;
 }
 
+// OpenRouter API Types
+export interface OpenRouterMessage {
+  role: "user" | "assistant" | "system";
+  content: string;
+}
+
+export interface OpenRouterResponse {
+  id: string;
+  choices: {
+    message: OpenRouterMessage;
+    finish_reason: string;
+  }[];
+  usage: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
+}
+
+export interface JsonSchemaFormat {
+  type: "json_schema";
+  json_schema: {
+    name: string;
+    strict: boolean;
+    schema: Record<string, unknown>;
+  };
+}
+
+export type ResponseFormat = { type: "json_object" } | JsonSchemaFormat;
+
+export interface ChatParams {
+  model: string;
+  messages: OpenRouterMessage[];
+  temperature?: number;
+  max_tokens?: number;
+  response_format?: ResponseFormat;
+}
+
+export interface ExtractionParams extends Omit<ChatParams, "response_format"> {
+  response_format: JsonSchemaFormat;
+}
+
+export interface ChatResponse {
+  content: string;
+  usage: OpenRouterResponse["usage"];
+}
+
 // Command Models
 export type RecipeImportCreateCommand = Pick<RecipeImport, "source_url">;
 
