@@ -73,7 +73,7 @@ const formatTimestamp = (value: string): string => {
     return value;
   }
 
-  return date.toLocaleString();
+  return date.toLocaleString("en-US");
 };
 
 const getSourceUrl = (recipe: RecipeDto, importMeta: RecipeImportDto | null): string | null =>
