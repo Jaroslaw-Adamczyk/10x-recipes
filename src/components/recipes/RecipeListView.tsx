@@ -38,34 +38,6 @@ const RecipeListView = ({ initialList }: RecipeListViewProps) => {
   const [createError, setCreateError] = useState<string | null>(null);
   const lastQueryRef = useRef<RecipeListQuery>({});
 
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    const params = new URLSearchParams(window.location.search);
-    const initialQuery = params.get("q");
-    const initialStatus = params.get("status");
-    const normalizedQuery = initialQuery ? normalizeSearchQuery(initialQuery) : "";
-
-    setQuery((current) => {
-      const nextQuery = {
-        ...current,
-        q: normalizedQuery || current.q,
-        status:
-          initialStatus === "processing" || initialStatus === "succeeded" || initialStatus === "failed"
-            ? initialStatus
-            : current.status,
-      };
-
-      lastQueryRef.current = nextQuery;
-      return nextQuery;
-    });
-    if (normalizedQuery) {
-      setSearchInput(normalizedQuery);
-    }
-  }, []);
-
   const listTitle = useMemo(() => {
     if (query.q) {
       return `Results for "${query.q}"`;
@@ -141,6 +113,36 @@ const RecipeListView = ({ initialList }: RecipeListViewProps) => {
 
   const handleRefresh = useCallback(() => {
     void fetchRecipes(lastQueryRef.current, "refresh", "refresh");
+  }, [fetchRecipes]);
+
+  // Initialize and fetch recipes on mount
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const initialQuery = params.get("q");
+    const initialStatus = params.get("status");
+    const normalizedQuery = initialQuery ? normalizeSearchQuery(initialQuery) : "";
+
+    const nextQuery: RecipeListQuery = {
+      q: normalizedQuery || undefined,
+      status:
+        initialStatus === "processing" || initialStatus === "succeeded" || initialStatus === "failed"
+          ? initialStatus
+          : undefined,
+    };
+
+    setQuery(nextQuery);
+    lastQueryRef.current = nextQuery;
+
+    if (normalizedQuery) {
+      setSearchInput(normalizedQuery);
+    }
+
+    // Fetch recipes on mount
+    void fetchRecipes(nextQuery, "load", "load");
   }, [fetchRecipes]);
 
   const handleOpenAdd = useCallback(() => {
