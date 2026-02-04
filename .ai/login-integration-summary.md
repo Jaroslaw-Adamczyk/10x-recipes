@@ -197,12 +197,12 @@ if (!Astro.locals.session) {
 
 ```bash
 # Test login endpoint
-curl -X POST http://localhost:4321/api/auth/login \
+curl -X POST http://localhost:3000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"test@example.com","password":"password123"}'
 
 # Test logout endpoint  
-curl -X POST http://localhost:4321/api/auth/logout \
+curl -X POST http://localhost:3000/api/auth/logout \
   -H "Cookie: sb-access-token=..." 
 ```
 

@@ -22,6 +22,7 @@ Recipes Saver centralizes text-only cooking instructions sourced from arbitrary 
 - **Backend:** Supabase Postgres with row-level security, built-in auth, and the supabase-js v2 client for recipe CRUD, metadata tracking, and per-user isolation.
 - **AI extraction:** OpenRouter unified model API drives the background worker that scrapes remote recipe URLs, normalizes data, and retries up to three times before surfacing failures.
 - **CI/CD & hosting:** GitHub Actions handles linting, formatting, and builds, while the stack is expected to deploy on DigitalOcean alongside Supabase-managed services.
+- **Testing:** Vitest and React Testing Library for unit and integration testing, Playwright for end-to-end (E2E) and visual testing, and Supabase CLI for security (RLS) testing.
 - **Tooling:** ESLint, Prettier, and lint-staged enforce formatting and code quality across `.ts`, `.tsx`, `.astro`, and other assets.
 
 ## Getting started locally
@@ -71,6 +72,8 @@ Not yet specified. Please add a `LICENSE` file or update this section once a lic
 - [React](https://react.dev/) v19.0.0 - UI library for building interactive components
 - [TypeScript](https://www.typescriptlang.org/) v5 - Type-safe JavaScript
 - [Tailwind CSS](https://tailwindcss.com/) v4.0.17 - Utility-first CSS framework
+- [Vitest](https://vitest.dev/) - Blazing fast unit test framework
+- [Playwright](https://playwright.dev/) - Reliable end-to-end testing for modern web apps
 
 ## Prerequisites
 
@@ -84,6 +87,8 @@ Not yet specified. Please add a `LICENSE` file or update this section once a lic
 - `npm run preview` - Preview production build
 - `npm run lint` - Run ESLint
 - `npm run lint:fix` - Fix ESLint issues
+- `npm run test` - Run unit and integration tests with Vitest
+- `npm run test:e2e` - Run end-to-end tests with Playwright
 
 ## Project Structure
 

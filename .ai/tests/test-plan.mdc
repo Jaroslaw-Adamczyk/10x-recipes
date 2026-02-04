@@ -1,0 +1,107 @@
+---
+description: Comprehensive test plan for the 10x Recipes project, covering technologies, strategy, and scenarios.
+globs: 
+alwaysApply: false
+---
+# Test Plan: 10x Recipes Project
+
+## 1. Introduction and Testing Objectives
+The purpose of this Test Plan is to define the strategy, resources, and schedule for testing the **10x Recipes** application. The primary goal is to ensure a high-quality, secure, and reliable platform for managing and importing recipes.
+
+### Objectives:
+- Verify that all core functionalities (Auth, CRUD, AI Import) work as expected.
+- Ensure data security and user privacy via Supabase RLS and Middleware.
+- Validate the reliability of AI-driven recipe extraction.
+- Ensure a seamless user experience across different devices and browsers.
+- Identify and document defects before production release.
+
+## 2. Scope of Testing
+### In-Scope:
+- **Authentication:** User registration, login, logout, and session management.
+- **Recipe Management:** Creating, viewing, editing, and deleting recipes.
+- **AI Integration:** Importing recipes from URLs and raw text using OpenRouter.
+- **Search & Filtering:** Real-time search and status filtering in the recipe list.
+- **Security:** Route protection via Astro Middleware and database access control via Supabase RLS.
+- **UI/UX:** Component responsiveness, accessibility (A11y), and form validations.
+
+### Out-of-Scope:
+- Stress testing of OpenRouter API (handled by the provider).
+- Deep performance profiling of the Supabase infrastructure.
+- Third-party payment integrations (if any).
+
+## 3. Testing Types
+| Type | Description | Tools |
+| :--- | :--- | :--- |
+| **Unit Testing** | Testing individual functions and React components in isolation. | Vitest, React Testing Library |
+| **Integration Testing** | Testing the interaction between services, API endpoints, and Supabase. | Vitest, Supabase CLI |
+| **End-to-End (E2E)** | Testing full user flows (e.g., Register -> Import Recipe -> Edit). | Playwright |
+| **AI Reliability Testing** | Specialized tests for LLM outputs using various recipe sources. | Custom scripts, Zod validation |
+| **Security Testing** | Verifying RLS policies and Middleware authorization. | Supabase CLI, Playwright |
+| **Visual Testing** | Ensuring UI consistency across different screen sizes. | Playwright Screenshots |
+
+## 4. Test Scenarios for Key Functionalities
+
+### 4.1. Authentication & Authorization
+- **TC-01:** Verify successful user registration with valid credentials.
+- **TC-02:** Verify that an unauthenticated user is redirected to the login page when accessing `/recipes`.
+- **TC-03:** Verify that a user cannot access another user's recipe via direct URL (RLS check).
+
+### 4.2. Recipe CRUD
+- **TC-04:** Verify manual creation of a recipe with all required fields.
+- **TC-05:** Verify that deleting a recipe removes it from the list and the database.
+- **TC-06:** Verify that editing a recipe correctly updates the information in the detail view.
+
+### 4.3. AI Recipe Import
+- **TC-07:** Verify recipe extraction from a standard cooking blog URL.
+- **TC-08:** Verify system behavior when the AI returns malformed data (Error handling).
+- **TC-09:** Verify extraction from raw text input (copy-paste scenario).
+
+### 4.4. UI & Search
+- **TC-10:** Verify that the search bar correctly filters the recipe list by title.
+- **TC-11:** Verify that the application is fully usable on mobile viewports (375px width).
+
+## 5. Test Environment
+- **Development:** Local environment using `npm run dev`.
+- **Staging:** DigitalOcean preview builds connected to a Supabase staging project.
+- **Database:** Supabase Local Emulator for integration tests to avoid polluting production data.
+- **Browsers:** Chrome (latest), Firefox (latest), Safari (latest), and Mobile Safari/Chrome.
+
+## 6. Testing Tools
+- **Framework:** Vitest (for Unit/Integration).
+- **E2E Testing:** Playwright.
+- **Component Testing:** React Testing Library.
+- **Linting/Formatting:** ESLint, Prettier.
+- **Database Testing:** Supabase CLI (for RLS testing).
+- **API Testing:** Postman or Bruno.
+
+## 7. Test Schedule
+| Phase | Activity | Duration |
+| :--- | :--- | :--- |
+| **Phase 1** | Unit tests for lib services and Zod schemas. | Week 1 |
+| **Phase 2** | Component testing (React islands) and Auth flow integration. | Week 2 |
+| **Phase 3** | E2E testing for core flows (Import/CRUD). | Week 3 |
+| **Phase 4** | Security audit (RLS) and Bug fixing. | Week 4 |
+| **Phase 5** | Final UAT (User Acceptance Testing) and Regression. | Week 5 |
+
+## 8. Test Acceptance Criteria
+- 100% of P0 and P1 test cases must pass.
+- No "Critical" or "High" severity bugs remain open.
+- Test coverage for business logic (`src/lib/services`) is at least 80%.
+- All RLS policies are verified to prevent cross-user data access.
+- AI extraction success rate is >90% for supported domains.
+
+## 9. Roles and Responsibilities
+- **QA Engineer:** Designing test cases, implementing E2E tests, reporting bugs.
+- **Developers:** Writing unit tests, fixing reported defects, maintaining RLS policies.
+- **Product Owner:** Defining acceptance criteria, performing UAT.
+- **DevOps:** Managing CI/CD pipelines and test environments.
+
+## 10. Bug Reporting Procedures
+Bugs should be reported in the project's issue tracker (e.g., GitHub Issues) with the following information:
+1. **Title:** Concise description of the issue.
+2. **Severity:** (Critical, High, Medium, Low).
+3. **Environment:** (Local, Staging, Browser version).
+4. **Steps to Reproduce:** Numbered list of actions.
+5. **Expected Result:** What should have happened.
+6. **Actual Result:** What actually happened (include screenshots/logs).
+7. **Labels:** `bug`, `priority:x`, `module:y`.
