@@ -49,7 +49,22 @@ export const listRecipes = async (
   }
 
   if (normalizedQuery) {
-    request = request.ilike("recipe_ingredients.normalized_name", `%${normalizedQuery}%`);
+    // We want to filter recipes that have at least one ingredient matching the query.
+    // In Supabase/PostgREST, filtering on a joined table (recipe_ingredients) 
+    // using .ilike() only filters the joined rows, not the parent rows.
+    // To filter the parent rows (recipes), we need to use an inner join.
+    // We do this by adding !inner to the joined table name in the select.
+    request = supabase
+      .from("recipes")
+      .select("id,title,status,error_message,created_at,updated_at,recipe_ingredients!inner(normalized_name)")
+      .eq("user_id", userId)
+      .order(DEFAULT_SORT_COLUMN, { ascending: !DEFAULT_SORT_DESC })
+      .order("position", { referencedTable: "recipe_ingredients", ascending: true })
+      .ilike("recipe_ingredients.normalized_name", `%${normalizedQuery}%`);
+
+    if (query.status) {
+      request = request.eq("status", query.status);
+    }
   }
 
   const { data, error } = await request;
@@ -59,7 +74,28 @@ export const listRecipes = async (
     throw buildError("Failed to list recipes.");
   }
 
-  const recipes = (data ?? []).map((item) => {
+  // If we filtered by ingredients, we might have duplicate recipes because of the inner join.
+  // Also, the recipe_ingredients only contains the MATCHING ingredients.
+  // We need to fetch ALL ingredients for these recipes to show the full preview.
+  let recipesData = data ?? [];
+  if (normalizedQuery && recipesData.length > 0) {
+    const recipeIds = recipesData.map((r) => r.id);
+    const { data: fullData, error: fullError } = await supabase
+      .from("recipes")
+      .select("id,title,status,error_message,created_at,updated_at,recipe_ingredients(normalized_name)")
+      .in("id", recipeIds)
+      .order(DEFAULT_SORT_COLUMN, { ascending: !DEFAULT_SORT_DESC })
+      .order("position", { referencedTable: "recipe_ingredients", ascending: true });
+
+    if (fullError) {
+      // eslint-disable-next-line no-console
+      console.error("Failed to fetch full recipe data after filtering", fullError);
+      throw buildError("Failed to load recipes.");
+    }
+    recipesData = fullData ?? [];
+  }
+
+  const recipes = recipesData.map((item) => {
     const ingredientsPreview = buildIngredientsPreview(item.recipe_ingredients ?? []);
     const entry: RecipeListItemDto = {
       id: item.id,

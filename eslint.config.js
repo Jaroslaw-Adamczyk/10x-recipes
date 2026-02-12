@@ -36,6 +36,7 @@ const jsxA11yConfig = tseslint.config({
 
 const reactConfig = tseslint.config({
   files: ["**/*.{js,jsx,ts,tsx}"],
+  ignores: ["tests-e2e/**/*", "**/*.spec.ts", "**/*.test.ts"],
   extends: [pluginReact.configs.flat.recommended],
   languageOptions: {
     ...pluginReact.configs.flat.recommended.languageOptions,

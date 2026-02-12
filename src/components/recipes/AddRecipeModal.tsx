@@ -50,6 +50,7 @@ export const AddRecipeModal = ({
       aria-modal="true"
       aria-labelledby="add-recipe-title"
       aria-describedby="add-recipe-description"
+      data-testid="add-recipe-modal"
     >
       <div className="w-full max-w-lg rounded-lg border border-border bg-background p-6 text-foreground shadow-lg">
         <h2 className="text-lg font-semibold" id="add-recipe-title">
@@ -59,10 +60,18 @@ export const AddRecipeModal = ({
           Import a recipe URL or enter the recipe manually.
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
-          <Button variant={tab === "import" ? "default" : "outline"} onClick={() => setTab("import")}>
+          <Button
+            variant={tab === "import" ? "default" : "outline"}
+            onClick={() => setTab("import")}
+            data-testid="tab-import"
+          >
             Import URL
           </Button>
-          <Button variant={tab === "manual" ? "default" : "outline"} onClick={() => setTab("manual")}>
+          <Button
+            variant={tab === "manual" ? "default" : "outline"}
+            onClick={() => setTab("manual")}
+            data-testid="tab-manual"
+          >
             Manual entry
           </Button>
         </div>

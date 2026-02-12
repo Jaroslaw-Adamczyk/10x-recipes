@@ -32,7 +32,6 @@ export const updateRecipe = async (
   if (command.prep_time_minutes !== undefined) {
     updatePayload.prep_time_minutes = command.prep_time_minutes;
   }
-  console.log("updatePayload", updatePayload);
   const { data: recipe, error: recipeError } = await supabase
     .from("recipes")
     .update(updatePayload)
@@ -40,7 +39,6 @@ export const updateRecipe = async (
     .eq("user_id", userId)
     .select()
     .maybeSingle();
-  console.log("recipe", recipe);
   if (recipeError) {
     // eslint-disable-next-line no-console
     console.error("Failed to update recipe", recipeError);

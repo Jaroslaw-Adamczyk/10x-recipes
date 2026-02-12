@@ -45,6 +45,7 @@ export function FormField({
         className={cn(error && "border-destructive focus-visible:ring-destructive/20")}
         aria-invalid={!!error}
         aria-describedby={error ? `${name}-error` : undefined}
+        data-testid={`input-${name}`}
       />
       {error && (
         <p id={`${name}-error`} className="text-sm text-destructive" role="alert">

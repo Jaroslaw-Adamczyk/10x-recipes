@@ -108,6 +108,7 @@ export const ManualRecipeForm = ({ onSubmit, onCancel, isSubmitting, error, onDi
         disabled={isSubmitting}
         aria-invalid={Boolean(message)}
         aria-describedby={message ? errorId : undefined}
+        data-testid="input-recipe-title"
       />
       <label className="text-sm font-medium text-foreground" htmlFor="manual-ingredients">
         Ingredients (one per line)
@@ -119,6 +120,7 @@ export const ManualRecipeForm = ({ onSubmit, onCancel, isSubmitting, error, onDi
         onChange={(event) => setIngredients(event.target.value)}
         placeholder="1 cup flour"
         disabled={isSubmitting}
+        data-testid="input-recipe-ingredients"
       />
       <label className="text-sm font-medium text-foreground" htmlFor="manual-steps">
         Steps (one per line)
@@ -130,6 +132,7 @@ export const ManualRecipeForm = ({ onSubmit, onCancel, isSubmitting, error, onDi
         onChange={(event) => setSteps(event.target.value)}
         placeholder="Mix the batter"
         disabled={isSubmitting}
+        data-testid="input-recipe-steps"
       />
       <label className="text-sm font-medium text-foreground" htmlFor="manual-cooktime">
         Cook time (minutes)
@@ -143,6 +146,7 @@ export const ManualRecipeForm = ({ onSubmit, onCancel, isSubmitting, error, onDi
         onChange={(event) => setCookTime(event.target.value)}
         placeholder="30"
         disabled={isSubmitting}
+        data-testid="input-recipe-cooktime"
       />
       {message ? (
         <p className="text-xs text-destructive" id={errorId}>
@@ -150,10 +154,10 @@ export const ManualRecipeForm = ({ onSubmit, onCancel, isSubmitting, error, onDi
         </p>
       ) : null}
       <div className="flex flex-wrap justify-end gap-3">
-        <Button variant="outline" onClick={onCancel} disabled={isSubmitting}>
+        <Button variant="outline" onClick={onCancel} disabled={isSubmitting} data-testid="button-cancel">
           Cancel
         </Button>
-        <Button onClick={handleSubmit} disabled={isSubmitting}>
+        <Button onClick={handleSubmit} disabled={isSubmitting} data-testid="button-create-recipe">
           {isSubmitting ? "Saving..." : "Create recipe"}
         </Button>
       </div>

@@ -69,7 +69,7 @@ export const ImportRecipeForm = ({ onSubmit, onCancel, isSubmitting, error, onDi
         </p>
       ) : null}
       <div className="flex flex-wrap justify-end gap-3">
-        <Button variant="outline" onClick={onCancel} disabled={isSubmitting}>
+        <Button variant="outline" onClick={onCancel} disabled={isSubmitting} data-testid="button-cancel">
           Cancel
         </Button>
         <Button onClick={handleSubmit} disabled={isSubmitting}>

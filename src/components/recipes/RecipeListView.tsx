@@ -52,7 +52,9 @@ const RecipeListView = ({ initialList }: RecipeListViewProps) => {
           <p className="mt-1 text-sm text-muted-foreground">{listTitle}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button onClick={handleOpenAdd}>Add recipe</Button>
+          <Button onClick={handleOpenAdd} data-testid="add-recipe-button">
+            Add recipe
+          </Button>
           <RefreshButton onClick={handleRefresh} loading={isLoading || isRefreshing} />
         </div>
       </div>
@@ -68,7 +70,7 @@ const RecipeListView = ({ initialList }: RecipeListViewProps) => {
       {emptyState ? (
         <EmptyState variant={emptyState} onAdd={handleOpenAdd} />
       ) : (
-        <RecipeList items={items} onSelect={handleSelect} onDelete={handleDelete} />
+        <RecipeList items={items} onSelect={handleSelect} onDelete={handleDelete} data-testid="recipe-list" />
       )}
       <AddRecipeModal
         open={isAddOpen}

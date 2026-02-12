@@ -10,7 +10,7 @@ interface SubmitButtonProps {
 
 export function SubmitButton({ label, loadingLabel = "Loading...", isLoading, disabled = false }: SubmitButtonProps) {
   return (
-    <Button type="submit" disabled={disabled || isLoading} className="w-full">
+    <Button type="submit" disabled={disabled || isLoading} className="w-full" data-testid="submit-button">
       {isLoading ? loadingLabel : label}
     </Button>
   );

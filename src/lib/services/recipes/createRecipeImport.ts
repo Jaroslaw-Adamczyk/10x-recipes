@@ -66,7 +66,6 @@ export const createRecipeImport = async (
     .single();
 
   if (recipeImportError) {
-    console.error("Failed to insert recipe import", recipeImportError);
     throw buildError("Failed to create recipe import.", "DATABASE");
   }
 
@@ -94,9 +93,6 @@ export const createRecipeImport = async (
 
       // Extract data using LLM
       const extracted = await extractRecipeData(html);
-
-      // eslint-disable-next-line no-console
-      console.log(`Successfully extracted recipe: ${extracted.title}`);
 
       // Update recipe
       const { error: updateError } = await supabase

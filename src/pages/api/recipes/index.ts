@@ -22,8 +22,8 @@ const stepSchema = z.object({
 
 const recipeCreateSchema = z.object({
   title: z.string().trim().min(1, "Title is required."),
-  cook_time_minutes: z.number().min(0, "Cook time must be >= 0.").optional(),
-  source_url: z.union([z.string().url("Invalid source_url."), z.null()]).optional(),
+  cook_time_minutes: z.number().min(0, "Cook time must be >= 0.").nullable().optional(),
+  source_url: z.string().url("Invalid source_url.").nullable().optional(),
   ingredients: z.array(ingredientSchema).min(1, "At least one ingredient is required."),
   steps: z.array(stepSchema).min(1, "At least one step is required."),
 });
@@ -59,7 +59,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
   } catch {
     return jsonResponse(400, { error: "Invalid JSON body." });
   }
-
   const parsed = recipeCreateSchema.safeParse(payload);
   if (!parsed.success) {
     return jsonResponse(400, {

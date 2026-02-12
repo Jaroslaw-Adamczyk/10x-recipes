@@ -1,4 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
+import dotenv from "dotenv";
+
+dotenv.config({ path: ".env.test" });
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -25,6 +28,12 @@ export default defineConfig({
 
     /* Screenshot on failure */
     screenshot: "only-on-failure",
+
+    launchOptions: {
+      args: [
+        "--disable-features=AcceptCHFrame,AutoExpandDetailsElement,AvoidUnnecessaryBeforeUnloadCheckSync,CertificateTransparencyComponentUpdater,DestroyProfileOnBrowserClose,DialMediaRouteProvider,ExtensionManifestV2Disabled,GlobalMediaControls,HttpsUpgrades,ImprovedCookieControls,LazyFrameLoading,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,DeferRendererTasksAfterInput",
+      ],
+    },
   },
 
   /* Configure projects for major browsers */
