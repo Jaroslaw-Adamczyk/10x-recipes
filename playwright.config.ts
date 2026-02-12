@@ -41,6 +41,11 @@ export default defineConfig({
     {
       name: "setup",
       testMatch: /.*\.setup\.ts/,
+      teardown: "teardown",
+    },
+    {
+      name: "teardown",
+      testMatch: /.*\.teardown\.ts/,
     },
     {
       name: "chromium",
