@@ -2,6 +2,9 @@ import { test, expect } from "./fixtures";
 import { TEST_USER } from "./test-data";
 
 test.describe("Login Flow", () => {
+  // Reset storage state for login tests to ensure we can test the login process
+  test.use({ storageState: { cookies: [], origins: [] } });
+
   test("should login successfully with valid credentials", async ({ loginPage, recipesPage }) => {
     await loginPage.goto();
     await loginPage.expectToBeOnLoginPage();

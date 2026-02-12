@@ -1,15 +1,14 @@
 import { test, expect } from "./fixtures";
-import { TEST_USER, SAMPLE_RECIPES, createUniqueRecipe } from "./test-data";
+import { SAMPLE_RECIPES, createUniqueRecipe } from "./test-data";
 
 test.describe("Recipe List Management", () => {
-  test.beforeEach(async ({ loginPage, recipesPage }) => {
-    // Login before each test
-    await loginPage.goto();
-    await loginPage.login(TEST_USER.email, TEST_USER.password);
+  test.beforeEach(async ({ recipesPage }) => {
+    // Navigate to recipes page before each test
+    await recipesPage.goto();
     await recipesPage.expectToBeOnRecipesPage();
   });
 
-  test("should display empty state when no recipes exist", async ({ recipesPage, page }) => {
+  test("should display empty state when no recipes exist", async ({ recipesPage }) => {
     // Navigate to recipes page
     await recipesPage.goto();
 

@@ -1,42 +1,29 @@
 import { test, expect } from "./fixtures";
-import { TEST_USER, SAMPLE_RECIPES, createUniqueRecipe } from "./test-data";
+import { SAMPLE_RECIPES, createUniqueRecipe } from "./test-data";
 
 test.describe("Add Recipe Flow", () => {
-  test("should login, add a new recipe manually, and verify it appears in the list", async ({
-    loginPage,
-    recipesPage,
-  }) => {
-    // Step 1: Open login page
-    await loginPage.goto();
-    await loginPage.expectToBeOnLoginPage();
-
-    // Step 2: Insert login and password and login
-    await loginPage.login(TEST_USER.email, TEST_USER.password);
-    await loginPage.waitForRedirect("/");
-
-    // Verify we're on the recipes page
+  test("should add a new recipe manually, and verify it appears in the list", async ({ recipesPage }) => {
+    // Step 1: Open recipes page
+    await recipesPage.goto();
     await recipesPage.expectToBeOnRecipesPage();
 
-    // Step 3: Click Add recipe and open modal
+    // Step 2: Click Add recipe and open modal
     await recipesPage.openAddRecipeModal();
 
-    // Step 4: Switch to manual entry tab and fill in all necessary fields
+    // Step 3: Switch to manual entry tab and fill in all necessary fields
     const uniqueRecipe = createUniqueRecipe(SAMPLE_RECIPES.mushroomRisotto);
     await recipesPage.addRecipeModal.fillAndCreateManualRecipe(uniqueRecipe);
 
-    // Step 5: Modal should close after successful creation
+    // Step 4: Modal should close after successful creation
     await recipesPage.addRecipeModal.expectModalToBeHidden();
 
-    // Step 6: Check if new record appeared on the list
+    // Step 5: Check if new record appeared on the list
     await recipesPage.expectRecipeInList(uniqueRecipe.title);
     await recipesPage.expectIngredientInPreview("Arborio rice");
   });
 
-  test("should create multiple recipes with different data", async ({ loginPage, recipesPage }) => {
-    // Login
-    await loginPage.goto();
-    await loginPage.login(TEST_USER.email, TEST_USER.password);
-    await loginPage.waitForRedirect("/");
+  test("should create multiple recipes with different data", async ({ recipesPage }) => {
+    await recipesPage.goto();
     await recipesPage.expectToBeOnRecipesPage();
 
     // Create first recipe
@@ -58,11 +45,8 @@ test.describe("Add Recipe Flow", () => {
     await recipesPage.expectRecipeInList(recipe2.title);
   });
 
-  test("should show validation errors when submitting empty form", async ({ loginPage, recipesPage }) => {
-    // Login
-    await loginPage.goto();
-    await loginPage.login(TEST_USER.email, TEST_USER.password);
-    await loginPage.waitForRedirect("/");
+  test("should show validation errors when submitting empty form", async ({ recipesPage }) => {
+    await recipesPage.goto();
     await recipesPage.expectToBeOnRecipesPage();
 
     // Open add recipe modal
@@ -77,14 +61,8 @@ test.describe("Add Recipe Flow", () => {
     await recipesPage.addRecipeModal.expectValidationError("Title is required");
   });
 
-  test("should show validation error when title is provided but ingredients are missing", async ({
-    loginPage,
-    recipesPage,
-  }) => {
-    // Login
-    await loginPage.goto();
-    await loginPage.login(TEST_USER.email, TEST_USER.password);
-    await loginPage.waitForRedirect("/");
+  test("should show validation error when title is provided but ingredients are missing", async ({ recipesPage }) => {
+    await recipesPage.goto();
     await recipesPage.expectToBeOnRecipesPage();
 
     // Open modal and fill only title
@@ -98,11 +76,8 @@ test.describe("Add Recipe Flow", () => {
     await recipesPage.addRecipeModal.expectValidationError("Add at least one ingredient");
   });
 
-  test("should allow canceling recipe creation with dirty form", async ({ loginPage, recipesPage }) => {
-    // Login
-    await loginPage.goto();
-    await loginPage.login(TEST_USER.email, TEST_USER.password);
-    await loginPage.waitForRedirect("/");
+  test("should allow canceling recipe creation with dirty form", async ({ recipesPage }) => {
+    await recipesPage.goto();
     await recipesPage.expectToBeOnRecipesPage();
 
     // Open modal and fill some data
@@ -117,11 +92,8 @@ test.describe("Add Recipe Flow", () => {
     await recipesPage.addRecipeModal.expectModalToBeHidden();
   });
 
-  test("should allow canceling without confirmation when form is clean", async ({ loginPage, recipesPage }) => {
-    // Login
-    await loginPage.goto();
-    await loginPage.login(TEST_USER.email, TEST_USER.password);
-    await loginPage.waitForRedirect("/");
+  test("should allow canceling without confirmation when form is clean", async ({ recipesPage }) => {
+    await recipesPage.goto();
     await recipesPage.expectToBeOnRecipesPage();
 
     // Open modal without filling anything
@@ -133,11 +105,8 @@ test.describe("Add Recipe Flow", () => {
     await recipesPage.addRecipeModal.expectModalToBeHidden();
   });
 
-  test("should create recipe with minimal data (no cook time)", async ({ loginPage, recipesPage }) => {
-    // Login
-    await loginPage.goto();
-    await loginPage.login(TEST_USER.email, TEST_USER.password);
-    await loginPage.waitForRedirect("/");
+  test("should create recipe with minimal data (no cook time)", async ({ recipesPage }) => {
+    await recipesPage.goto();
     await recipesPage.expectToBeOnRecipesPage();
 
     // Create recipe without cook time
@@ -150,11 +119,8 @@ test.describe("Add Recipe Flow", () => {
     await recipesPage.expectRecipeInList(minimalRecipe.title);
   });
 
-  test("should switch between import and manual tabs", async ({ loginPage, recipesPage }) => {
-    // Login
-    await loginPage.goto();
-    await loginPage.login(TEST_USER.email, TEST_USER.password);
-    await loginPage.waitForRedirect("/");
+  test("should switch between import and manual tabs", async ({ recipesPage }) => {
+    await recipesPage.goto();
     await recipesPage.expectToBeOnRecipesPage();
 
     // Open modal

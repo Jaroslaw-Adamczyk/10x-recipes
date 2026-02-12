@@ -5,5 +5,5 @@ test("has title", async ({ page }) => {
 
   // Expect a title "to contain" a substring.
   // Note: Adjust this based on your actual site title
-  await expect(page).toHaveTitle(/10x Recipes|Astro/);
+  await expect(page).toHaveTitle(/Recipes/);
 });

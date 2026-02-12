@@ -1,11 +1,10 @@
 import { test, expect } from "./fixtures";
-import { TEST_USER, SAMPLE_RECIPES, createUniqueRecipe } from "./test-data";
+import { SAMPLE_RECIPES, createUniqueRecipe } from "./test-data";
 
 test.describe("Recipe Search Flow", () => {
-  test.beforeEach(async ({ loginPage, recipesPage }) => {
-    // Login before each test
-    await loginPage.goto();
-    await loginPage.login(TEST_USER.email, TEST_USER.password);
+  test.beforeEach(async ({ recipesPage }) => {
+    // Navigate to recipes page before each test
+    await recipesPage.goto();
     await recipesPage.expectToBeOnRecipesPage();
   });
 
