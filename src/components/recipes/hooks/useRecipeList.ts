@@ -1,14 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type {
-  RecipeCreateCommand,
-  RecipeCreateResultDto,
-  RecipeImportCreateCommand,
-  RecipeListDto,
-  RecipeListItemDto,
-  RecipeListQuery,
-} from "@/types";
+import type { RecipeListDto, RecipeListItemDto, RecipeListQuery } from "@/types";
 import type { RecipeListErrorViewModel } from "../types/recipeListTypes";
 import { buildListUrl, normalizeSearchQuery } from "../utils/recipeListUtils";
+import { useRecipeCreate } from "./useRecipeCreate";
+import { useRecipeDelete } from "./useRecipeDelete";
 
 interface UseRecipeListProps {
   initialList: RecipeListDto;
@@ -22,14 +17,8 @@ export const useRecipeList = ({ initialList }: UseRecipeListProps) => {
   const [searchInput, setSearchInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isAddOpen, setIsAddOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<RecipeListItemDto | null>(null);
   const [error, setError] = useState<RecipeListErrorViewModel | null>(null);
   const [searchError, setSearchError] = useState<string | null>(null);
-  const [importError, setImportError] = useState<string | null>(null);
-  const [createError, setCreateError] = useState<string | null>(null);
   const lastQueryRef = useRef<RecipeListQuery>({});
 
   const listTitle = useMemo(() => {
@@ -81,6 +70,8 @@ export const useRecipeList = ({ initialList }: UseRecipeListProps) => {
     []
   );
 
+  // -- Search --
+
   const handleSearchChange = useCallback((value: string) => {
     setSearchInput(value);
     if (!value.trim()) {
@@ -103,9 +94,17 @@ export const useRecipeList = ({ initialList }: UseRecipeListProps) => {
     void fetchRecipes({ ...query, q: undefined }, "search", "load");
   }, [fetchRecipes, query]);
 
+  // -- Refresh & navigation --
+
   const handleRefresh = useCallback(() => {
     void fetchRecipes(lastQueryRef.current, "refresh", "refresh");
   }, [fetchRecipes]);
+
+  const handleSelect = useCallback((id: string) => {
+    window.location.assign(`/recipes/${id}`);
+  }, []);
+
+  // -- URL init --
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -135,145 +134,38 @@ export const useRecipeList = ({ initialList }: UseRecipeListProps) => {
     void fetchRecipes(nextQuery, "load", "load");
   }, [fetchRecipes]);
 
-  const handleOpenAdd = useCallback(() => {
-    setIsAddOpen(true);
-  }, []);
+  // -- Composed hooks --
 
-  const handleCloseAdd = useCallback(() => {
-    setIsAddOpen(false);
-    setImportError(null);
-    setCreateError(null);
-  }, []);
+  const {
+    isDeleting,
+    isDeleteDialogOpen,
+    deleteTargetStatus,
+    handleDelete,
+    handleDeleteConfirmed,
+    handleDeleteCancel,
+  } = useRecipeDelete({
+    setItems,
+    setError,
+  });
 
-  const handleSelect = useCallback((id: string) => {
-    window.location.assign(`/recipes/${id}`);
-  }, []);
+  const {
+    isSubmitting,
+    isAddOpen,
+    importError,
+    createError,
+    handleOpenAdd,
+    handleCloseAdd,
+    handleImport,
+    handleCreate,
+  } = useRecipeCreate({
+    setItems,
+    setError,
+    onRefresh: handleRefresh,
+  });
 
-  const deleteRecipeById = useCallback(async (target: RecipeListItemDto) => {
-    setError(null);
-    setIsDeleting(true);
-    try {
-      const response = await fetch(`/api/recipes/${target.id}`, { method: "DELETE" });
-      if (!response.ok) {
-        if (response.status === 404) {
-          setItems((current) => current.filter((item) => item.id !== target.id));
-          setError({ message: "Recipe already removed.", statusCode: 404, context: "delete" });
-          return;
-        }
-        setError({ message: "Unable to delete recipe.", statusCode: response.status, context: "delete" });
-        return;
-      }
+  // -- Derived state --
 
-      setItems((current) => current.filter((item) => item.id !== target.id));
-    } catch {
-      setError({ message: "Network error while deleting.", context: "delete" });
-    } finally {
-      setIsDeleting(false);
-    }
-  }, []);
-
-  const handleDelete = useCallback(
-    (item: RecipeListItemDto) => {
-      if (item.status === "failed") {
-        void deleteRecipeById(item);
-        return;
-      }
-      setDeleteTarget(item);
-    },
-    [deleteRecipeById]
-  );
-
-  const handleDeleteConfirmed = useCallback(async () => {
-    if (!deleteTarget) {
-      return;
-    }
-    await deleteRecipeById(deleteTarget);
-    setDeleteTarget(null);
-  }, [deleteRecipeById, deleteTarget]);
-
-  const handleImport = useCallback(
-    async (command: RecipeImportCreateCommand) => {
-      setIsSubmitting(true);
-      setImportError(null);
-      setCreateError(null);
-      setError(null);
-
-      try {
-        const response = await fetch("/api/recipes/import", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(command),
-        });
-
-        if (!response.ok) {
-          if (response.status === 400) {
-            setImportError("Enter a valid recipe URL.");
-            return;
-          }
-          if (response.status === 409) {
-            setImportError("This recipe URL already exists.");
-            return;
-          }
-          setError({ message: "Unable to import recipe.", statusCode: response.status, context: "import" });
-          return;
-        }
-
-        await fetchRecipes(lastQueryRef.current, "refresh", "refresh");
-        setIsAddOpen(false);
-      } catch {
-        setError({ message: "Network error while importing.", context: "import" });
-      } finally {
-        setIsSubmitting(false);
-      }
-    },
-    [fetchRecipes]
-  );
-
-  const handleCreate = useCallback(async (command: RecipeCreateCommand) => {
-    setIsSubmitting(true);
-    setImportError(null);
-    setCreateError(null);
-    setError(null);
-
-    try {
-      const response = await fetch("/api/recipes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(command),
-      });
-
-      if (!response.ok) {
-        if (response.status === 400) {
-          setCreateError("Please double-check your recipe details.");
-          return;
-        }
-        if (response.status === 409) {
-          setCreateError("A recipe with this source URL already exists.");
-          return;
-        }
-        setError({ message: "Unable to create recipe.", statusCode: response.status, context: "create" });
-        return;
-      }
-
-      const result = (await response.json()) as RecipeCreateResultDto;
-      const preview = result.ingredients.map((ingredient) => ingredient.normalized_name);
-      const listItem: RecipeListItemDto = {
-        id: result.recipe.id,
-        title: result.recipe.title,
-        status: result.recipe.status,
-        error_message: result.recipe.error_message ?? null,
-        created_at: result.recipe.created_at,
-        updated_at: result.recipe.updated_at,
-        ingredients_preview: preview,
-      };
-      setItems((current) => [listItem, ...current]);
-      setIsAddOpen(false);
-    } catch {
-      setError({ message: "Network error while creating.", context: "create" });
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, []);
+  const isBusy = isLoading || isRefreshing;
 
   const emptyState = useMemo<EmptyStateVariant | null>(() => {
     if (items.length > 0) {
@@ -285,30 +177,44 @@ export const useRecipeList = ({ initialList }: UseRecipeListProps) => {
   return {
     items,
     listTitle,
-    searchInput,
-    isLoading,
-    isRefreshing,
+    isBusy,
     isSubmitting,
     isDeleting,
     isAddOpen,
-    deleteTarget,
     error,
-    searchError,
-    importError,
-    createError,
     emptyState,
-    handleSearchChange,
-    handleSearchSubmit,
-    handleSearchClear,
     handleRefresh,
     handleOpenAdd,
     handleCloseAdd,
     handleSelect,
     handleDelete,
-    handleDeleteConfirmed,
     handleImport,
     handleCreate,
     setError,
-    setDeleteTarget,
+    search: {
+      input: searchInput,
+      error: searchError,
+      onChange: handleSearchChange,
+      onSubmit: handleSearchSubmit,
+      onClear: handleSearchClear,
+    },
+    delete: {
+      isDeleting,
+      isDeleteDialogOpen,
+      deleteTargetStatus,
+      handleDelete,
+      handleDeleteConfirmed,
+      handleDeleteCancel,
+    },
+    create: {
+      isSubmitting,
+      isAddOpen,
+      importError,
+      createError,
+      handleOpenAdd,
+      handleCloseAdd,
+      handleImport,
+      handleCreate,
+    },
   };
 };

@@ -56,9 +56,9 @@ describe("useRecipeList", () => {
     it("should update searchInput state when typing", () => {
       const { result } = renderHook(() => useRecipeList({ initialList: mockInitialList }));
       act(() => {
-        result.current.handleSearchChange("pizza");
+        result.current.search.onChange("pizza");
       });
-      expect(result.current.searchInput).toBe("pizza");
+      expect(result.current.search.input).toBe("pizza");
     });
 
     it("should trigger fetch with normalized query on submit", async () => {
@@ -68,7 +68,7 @@ describe("useRecipeList", () => {
       await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
 
       await act(async () => {
-        result.current.handleSearchSubmit("Pizza");
+        result.current.search.onSubmit("Pizza");
       });
 
       expect(fetch).toHaveBeenCalledWith(expect.stringContaining("q=Pizza"));
@@ -83,10 +83,10 @@ describe("useRecipeList", () => {
       vi.mocked(fetch).mockResolvedValueOnce({ ok: false, status: 400 } as Response);
 
       await act(async () => {
-        result.current.handleSearchSubmit("invalid");
+        result.current.search.onSubmit("invalid");
       });
 
-      expect(result.current.searchError).toBe("Search query is not valid.");
+      expect(result.current.search.error).toBe("Search query is not valid.");
     });
   });
 
@@ -108,7 +108,7 @@ describe("useRecipeList", () => {
       await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
 
       await act(async () => {
-        result.current.handleDelete(failedRecipe);
+        result.current.delete.handleDelete(failedRecipe);
       });
 
       expect(fetch).toHaveBeenCalledWith("/api/recipes/2", { method: "DELETE" });
@@ -122,9 +122,10 @@ describe("useRecipeList", () => {
       await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
 
       act(() => {
-        result.current.handleDelete(mockInitialList.data[0]);
+        result.current.delete.handleDelete(mockInitialList.data[0]);
       });
-      expect(result.current.deleteTarget).toEqual(mockInitialList.data[0]);
+      expect(result.current.delete.isDeleteDialogOpen).toBe(true);
+      expect(result.current.delete.deleteTargetStatus).toBe("succeeded");
     });
 
     it("should handle 404 (already deleted) gracefully", async () => {
@@ -136,10 +137,10 @@ describe("useRecipeList", () => {
       vi.mocked(fetch).mockResolvedValueOnce({ ok: false, status: 404 } as Response);
 
       act(() => {
-        result.current.handleDelete(mockInitialList.data[0]);
+        result.current.delete.handleDelete(mockInitialList.data[0]);
       });
       await act(async () => {
-        await result.current.handleDeleteConfirmed();
+        await result.current.delete.handleDeleteConfirmed();
       });
 
       expect(result.current.items).toHaveLength(0);
@@ -174,7 +175,7 @@ describe("useRecipeList", () => {
       } as Response);
 
       await act(async () => {
-        result.current.handleSearchSubmit("nonexistent");
+        result.current.search.onSubmit("nonexistent");
       });
 
       expect(result.current.emptyState).toBe("no-matches");
@@ -191,7 +192,7 @@ describe("useRecipeList", () => {
       });
 
       expect(result.current.error?.message).toBe("Network error while loading recipes.");
-      expect(result.current.isRefreshing).toBe(false);
+      expect(result.current.isBusy).toBe(false);
     });
 
     it("should handle 401 Unauthorized by asking user to sign in", async () => {

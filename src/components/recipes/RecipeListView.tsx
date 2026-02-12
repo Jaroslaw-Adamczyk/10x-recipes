@@ -17,31 +17,15 @@ const RecipeListView = ({ initialList }: RecipeListViewProps) => {
   const {
     items,
     listTitle,
-    searchInput,
-    isLoading,
-    isRefreshing,
-    isSubmitting,
-    isDeleting,
-    isAddOpen,
-    deleteTarget,
+    isBusy,
     error,
-    searchError,
-    importError,
-    createError,
-    emptyState,
-    handleSearchChange,
-    handleSearchSubmit,
-    handleSearchClear,
-    handleRefresh,
-    handleOpenAdd,
-    handleCloseAdd,
-    handleSelect,
-    handleDelete,
-    handleDeleteConfirmed,
-    handleImport,
-    handleCreate,
     setError,
-    setDeleteTarget,
+    emptyState,
+    handleRefresh,
+    handleSelect,
+    search,
+    create,
+    delete: del,
   } = useRecipeList({ initialList });
 
   return (
@@ -52,41 +36,41 @@ const RecipeListView = ({ initialList }: RecipeListViewProps) => {
           <p className="mt-1 text-sm text-muted-foreground">{listTitle}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button onClick={handleOpenAdd} data-testid="add-recipe-button">
+          <Button onClick={create.handleOpenAdd} data-testid="add-recipe-button">
             Add recipe
           </Button>
-          <RefreshButton onClick={handleRefresh} loading={isLoading || isRefreshing} />
+          <RefreshButton onClick={handleRefresh} loading={isBusy} />
         </div>
       </div>
       <SearchBar
-        value={searchInput}
-        onChange={handleSearchChange}
-        onSubmit={handleSearchSubmit}
-        onClear={handleSearchClear}
-        error={searchError}
-        disabled={isLoading || isRefreshing}
+        value={search.input}
+        onChange={search.onChange}
+        onSubmit={search.onSubmit}
+        onClear={search.onClear}
+        error={search.error}
+        disabled={isBusy}
       />
       <ErrorBanner error={error} onDismiss={() => setError(null)} />
       {emptyState ? (
-        <EmptyState variant={emptyState} onAdd={handleOpenAdd} />
+        <EmptyState variant={emptyState} onAdd={create.handleOpenAdd} />
       ) : (
-        <RecipeList items={items} onSelect={handleSelect} onDelete={handleDelete} data-testid="recipe-list" />
+        <RecipeList items={items} onSelect={handleSelect} onDelete={del.handleDelete} data-testid="recipe-list" />
       )}
       <AddRecipeModal
-        open={isAddOpen}
-        onClose={handleCloseAdd}
-        isSubmitting={isSubmitting}
-        onImport={handleImport}
-        onCreate={handleCreate}
-        importError={importError}
-        createError={createError}
+        open={create.isAddOpen}
+        onClose={create.handleCloseAdd}
+        isSubmitting={create.isSubmitting}
+        onImport={create.handleImport}
+        onCreate={create.handleCreate}
+        importError={create.importError}
+        createError={create.createError}
       />
       <DeleteConfirmationDialog
-        open={Boolean(deleteTarget) && deleteTarget?.status !== "failed"}
-        status={deleteTarget?.status ?? "succeeded"}
-        onConfirm={handleDeleteConfirmed}
-        onClose={() => setDeleteTarget(null)}
-        isDeleting={isDeleting}
+        open={del.isDeleteDialogOpen}
+        status={del.deleteTargetStatus}
+        onConfirm={del.handleDeleteConfirmed}
+        onClose={del.handleDeleteCancel}
+        isDeleting={del.isDeleting}
       />
     </section>
   );
