@@ -4,6 +4,7 @@ import type { RecipeListErrorViewModel } from "../types/recipeListTypes";
 import { buildListUrl, normalizeSearchQuery } from "../utils/recipeListUtils";
 import { useRecipeCreate } from "./useRecipeCreate";
 import { useRecipeDelete } from "./useRecipeDelete";
+import { useRecipeSearch } from "./useRecipeSearch";
 
 interface UseRecipeListProps {
   initialList: RecipeListDto;
@@ -14,11 +15,9 @@ export type EmptyStateVariant = "no-matches" | "no-recipes";
 export const useRecipeList = ({ initialList }: UseRecipeListProps) => {
   const [items, setItems] = useState<RecipeListItemDto[]>(initialList.data);
   const [query, setQuery] = useState<RecipeListQuery>({});
-  const [searchInput, setSearchInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<RecipeListErrorViewModel | null>(null);
-  const [searchError, setSearchError] = useState<string | null>(null);
   const lastQueryRef = useRef<RecipeListQuery>({});
 
   const listTitle = useMemo(() => {
@@ -27,6 +26,21 @@ export const useRecipeList = ({ initialList }: UseRecipeListProps) => {
     }
     return "All recipes";
   }, [query.q]);
+
+  // -- Search --
+
+  const {
+    searchInput,
+    setSearchInput,
+    searchError,
+    setSearchError,
+    handleSearchChange,
+    handleSearchSubmit,
+    handleSearchClear,
+  } = useRecipeSearch({
+    query,
+    onSearch: (nextQuery) => fetchRecipes(nextQuery, "search", "load"),
+  });
 
   const fetchRecipes = useCallback(
     async (nextQuery: RecipeListQuery, context: RecipeListErrorViewModel["context"], mode: "load" | "refresh") => {
@@ -67,32 +81,8 @@ export const useRecipeList = ({ initialList }: UseRecipeListProps) => {
         }
       }
     },
-    []
+    [setSearchError]
   );
-
-  // -- Search --
-
-  const handleSearchChange = useCallback((value: string) => {
-    setSearchInput(value);
-    if (!value.trim()) {
-      setQuery((current) => ({ ...current, q: undefined }));
-    }
-  }, []);
-
-  const handleSearchSubmit = useCallback(
-    (normalized: string) => {
-      if (!normalized) {
-        return;
-      }
-      void fetchRecipes({ ...query, q: normalized }, "search", "load");
-    },
-    [fetchRecipes, query]
-  );
-
-  const handleSearchClear = useCallback(() => {
-    setSearchInput("");
-    void fetchRecipes({ ...query, q: undefined }, "search", "load");
-  }, [fetchRecipes, query]);
 
   // -- Refresh & navigation --
 
@@ -132,7 +122,7 @@ export const useRecipeList = ({ initialList }: UseRecipeListProps) => {
     }
 
     void fetchRecipes(nextQuery, "load", "load");
-  }, [fetchRecipes]);
+  }, [fetchRecipes, setSearchInput]);
 
   // -- Composed hooks --
 
