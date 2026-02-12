@@ -121,7 +121,11 @@ export const useRecipeList = ({ initialList }: UseRecipeListProps) => {
       setSearchInput(normalizedQuery);
     }
 
-    void fetchRecipes(nextQuery, "load", "load");
+    // Skip fetch on first load if no URL params - we already have initialList data
+    const hasUrlParams = normalizedQuery || nextQuery.status;
+    if (hasUrlParams) {
+      void fetchRecipes(nextQuery, "load", "load");
+    }
   }, [fetchRecipes, setSearchInput]);
 
   // -- Composed hooks --

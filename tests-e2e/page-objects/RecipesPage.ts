@@ -40,6 +40,9 @@ export class RecipesPage {
   }
 
   async openAddRecipeModal() {
+    await expect(this.addRecipeButton).toBeVisible();
+    await expect(this.addRecipeButton).toBeEnabled();
+    await this.page.waitForTimeout(100);
     await this.addRecipeButton.click();
     await this.addRecipeModal.expectModalToBeVisible();
   }
@@ -49,6 +52,8 @@ export class RecipesPage {
   }
 
   async searchByIngredient(ingredient: string) {
+    await this.searchInput.isEditable();
+    await this.page.waitForTimeout(100);
     await this.searchInput.fill(ingredient);
     await this.searchButton.click();
   }

@@ -32,7 +32,11 @@ if (query.status) {
 let initialList: RecipeListDto = { data: [], next_cursor: null };
 
 try {
-  const response = await fetch(listUrl);
+  const response = await fetch(listUrl, {
+    headers: {
+      cookie: Astro.request.headers.get("cookie") ?? "",
+    },
+  });
   if (response.ok) {
     initialList = (await response.json()) as RecipeListDto;
   }
