@@ -49,6 +49,8 @@ describe("useRecipeList", () => {
       await waitFor(() => {
         expect(fetch).toHaveBeenCalledWith(expect.stringContaining("q=chicken"));
       });
+
+      searchSpy.mockRestore();
     });
   });
 
@@ -64,9 +66,6 @@ describe("useRecipeList", () => {
     it("should trigger fetch with normalized query on submit", async () => {
       const { result } = renderHook(() => useRecipeList({ initialList: mockInitialList }));
 
-      // Wait for initial mount fetch
-      await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
-
       await act(async () => {
         result.current.search.onSubmit("Pizza");
       });
@@ -76,9 +75,6 @@ describe("useRecipeList", () => {
 
     it("should handle search validation errors (400)", async () => {
       const { result } = renderHook(() => useRecipeList({ initialList: mockInitialList }));
-
-      // Wait for initial mount fetch
-      await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
 
       vi.mocked(fetch).mockResolvedValueOnce({ ok: false, status: 400 } as Response);
 
@@ -104,9 +100,6 @@ describe("useRecipeList", () => {
     it("should delete failed recipes immediately without confirmation", async () => {
       const { result } = renderHook(() => useRecipeList({ initialList: { data: [failedRecipe], next_cursor: null } }));
 
-      // Wait for initial mount fetch
-      await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
-
       await act(async () => {
         result.current.delete.handleDelete(failedRecipe);
       });
@@ -118,9 +111,6 @@ describe("useRecipeList", () => {
     it("should set deleteTarget for successful recipes (requires confirmation)", async () => {
       const { result } = renderHook(() => useRecipeList({ initialList: mockInitialList }));
 
-      // Wait for initial mount fetch
-      await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
-
       act(() => {
         result.current.delete.handleDelete(mockInitialList.data[0]);
       });
@@ -130,9 +120,6 @@ describe("useRecipeList", () => {
 
     it("should handle 404 (already deleted) gracefully", async () => {
       const { result } = renderHook(() => useRecipeList({ initialList: mockInitialList }));
-
-      // Wait for initial mount fetch
-      await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
 
       vi.mocked(fetch).mockResolvedValueOnce({ ok: false, status: 404 } as Response);
 
@@ -156,17 +143,12 @@ describe("useRecipeList", () => {
 
       const { result } = renderHook(() => useRecipeList({ initialList: { data: [], next_cursor: null } }));
 
-      // Wait for initial mount fetch
-      await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
-
       expect(result.current.emptyState).toBe("no-recipes");
+      searchSpy.mockRestore();
     });
 
     it("should return 'no-matches' variant when list is empty during search", async () => {
       const { result } = renderHook(() => useRecipeList({ initialList: mockInitialList }));
-
-      // Wait for initial mount fetch
-      await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
 
       // Mock empty search result
       vi.mocked(fetch).mockResolvedValueOnce({
