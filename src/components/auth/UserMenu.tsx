@@ -26,10 +26,10 @@ export function UserMenu({ user }: UserMenuProps) {
         // Redirect to login page after successful logout
         window.location.href = "/auth/login";
       } else {
-        console.error("Logout failed");
         setIsLoggingOut(false);
       }
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Logout error:", error);
       setIsLoggingOut(false);
     }

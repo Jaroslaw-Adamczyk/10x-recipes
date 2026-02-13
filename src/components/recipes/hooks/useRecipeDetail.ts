@@ -7,7 +7,7 @@ import type {
   RecipeStatus,
   RecipeStepDto,
 } from "@/types";
-import { formatCookTime, formatTimestamp, isValidUrl } from "@/components/recipes/utils/formatters";
+import { formatCookTime, formatTimestamp } from "@/components/recipes/utils/formatters";
 
 export interface RecipeDetailViewModel {
   recipe: RecipeDto;

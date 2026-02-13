@@ -8,6 +8,7 @@ export const POST: APIRoute = async ({ locals }) => {
     const { error } = await locals.supabase.auth.signOut();
 
     if (error) {
+      // eslint-disable-next-line no-console
       console.error("Logout error:", error);
       // Still return success to avoid UX issues
       // Cookies are cleared client-side if server logout fails
@@ -23,6 +24,7 @@ export const POST: APIRoute = async ({ locals }) => {
       }
     );
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error("Unexpected logout error:", error);
     // Still return success - logout should be idempotent
     return new Response(
