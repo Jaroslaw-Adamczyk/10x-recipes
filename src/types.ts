@@ -22,7 +22,7 @@ export type RecipeListItemDto = Pick<
   "id" | "title" | "status" | "error_message" | "created_at" | "updated_at"
 > & {
   // Derived server-side from ingredient names.
-  ingredients_preview: string[];
+  ingredients_preview: string[]
 };
 
 export interface RecipeDetailDto {
