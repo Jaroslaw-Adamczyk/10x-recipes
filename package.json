@@ -69,7 +69,8 @@
     "lint-staged": "15.5.0",
     "prettier-plugin-astro": "0.14.1",
     "typescript-eslint": "8.28.0",
-    "vitest": "^4.0.18"
+    "vitest": "^4.0.18",
+    "wrangler": "^4.65.0"
   },
   "lint-staged": {
     "*.{ts,tsx,astro}": [
