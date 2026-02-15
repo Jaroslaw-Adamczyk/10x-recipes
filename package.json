@@ -1,5 +1,5 @@
 {
-  "name": "10x-astro-starter",
+  "name": "10x-recipes",
   "type": "module",
   "version": "0.0.1",
   "scripts": {
@@ -18,7 +18,7 @@
     "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
-    "@astrojs/node": "^9.4.3",
+    "@astrojs/cloudflare": "^12.6.12",
     "@astrojs/react": "^4.3.1",
     "@astrojs/sitemap": "^3.5.1",
     "@radix-ui/react-label": "^2.1.8",

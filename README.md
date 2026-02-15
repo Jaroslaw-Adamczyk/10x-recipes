@@ -21,7 +21,8 @@ Recipes Saver centralizes text-only cooking instructions sourced from arbitrary 
 -  **Frontend:** Astro 5 pages with React 19 islands, Tailwind 4 utility styling, TypeScript 5 typing, and shadcn/ui components where forms, modals, and dialogs need accessibility.
 - **Backend:** Supabase Postgres with row-level security, built-in auth, and the supabase-js v2 client for recipe CRUD, metadata tracking, and per-user isolation.
 - **AI extraction:** OpenRouter unified model API drives the background worker that scrapes remote recipe URLs, normalizes data, and retries up to three times before surfacing failures.
-- **CI/CD & hosting:** GitHub Actions handles linting, formatting, and builds, while the stack is expected to deploy on DigitalOcean alongside Supabase-managed services.
+- **CI/CD & hosting:** GitHub Actions handles linting, formatting, and builds, while the stack is deployed to **Cloudflare Pages**.
+- **Wrangler:** Used for Cloudflare deployment and local preview of the production environment.
 - **Testing:** Vitest and React Testing Library for unit and integration testing, Playwright for end-to-end (E2E) and visual testing, and Supabase CLI for security (RLS) testing.
 - **Tooling:** ESLint, Prettier, and lint-staged enforce formatting and code quality across `.ts`, `.tsx`, `.astro`, and other assets.
 
@@ -89,6 +90,7 @@ Not yet specified. Please add a `LICENSE` file or update this section once a lic
 - `npm run lint:fix` - Fix ESLint issues
 - `npm run test` - Run unit and integration tests with Vitest
 - `npm run test:e2e` - Run end-to-end tests with Playwright
+- `npx wrangler pages dev ./dist` - Preview the production build locally in a Cloudflare environment
 
 ## Project Structure
 
