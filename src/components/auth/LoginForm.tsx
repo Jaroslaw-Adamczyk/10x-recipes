@@ -52,6 +52,7 @@ export function LoginForm({ redirectTo = "/", initialError }: LoginFormProps) {
       });
 
       const data = await response.json();
+      console.log(data);
 
       if (!response.ok) {
         // Handle Zod array-based field errors

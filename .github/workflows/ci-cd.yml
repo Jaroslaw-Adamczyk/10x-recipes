@@ -131,22 +131,24 @@ jobs:
     environment: Production
     needs: [build]
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-    permissions:
-      contents: read
-      deployments: write
+
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist/
       
-      - name: Deploy to Cloudflare Pages
+      - name: Deploy to Cloudflare
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy dist --project-name=10x-recipes
+
 
   pr-status:
     name: PR Status

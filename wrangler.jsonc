@@ -2,5 +2,10 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "10x-recipes",
   "compatibility_date": "2026-02-15",
-  "pages_build_output_dir": "./dist"
+  "compatibility_flags": ["nodejs_compat", "fetch_iterable_type_support"],
+  "main": "./dist/_worker.js/index.js",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS"
+  },
 }

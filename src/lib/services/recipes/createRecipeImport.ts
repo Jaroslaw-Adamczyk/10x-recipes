@@ -27,10 +27,13 @@ const stripImportUserId = (recipeImport: RecipeImportDto & { user_id?: string })
 
 import { extractRecipeData } from "./extractRecipeData";
 
+type WaitUntil = (promise: Promise<unknown>) => void;
+
 export const createRecipeImport = async (
   supabase: SupabaseClient,
   userId: string,
-  command: RecipeImportCreateCommand
+  command: RecipeImportCreateCommand,
+  waitUntil: WaitUntil
 ): Promise<RecipeImportCreateResult> => {
   // 1. Create placeholders
   const { data: recipe, error: recipeError } = await supabase
@@ -69,15 +72,12 @@ export const createRecipeImport = async (
     throw buildError("Failed to create recipe import.", "DATABASE");
   }
 
-  // 2. Start background extraction (simulated for MVP)
-  // In a real app, this would be a background job.
-  // For now, we'll run it and update the records.
-  (async () => {
+  // 2. Start background extraction via waitUntil to keep the worker alive
+  const backgroundWork = (async () => {
     try {
       // eslint-disable-next-line no-console
       console.log(`Starting background extraction for: ${command.source_url}`);
 
-      // Fetch the content from the URL (simplified for MVP)
       const response = await fetch(command.source_url, {
         headers: {
           "User-Agent":
@@ -92,7 +92,9 @@ export const createRecipeImport = async (
       const html = await response.text();
 
       // Extract data using LLM
+      console.log("extracting data");
       const extracted = await extractRecipeData(html);
+      console.log(extracted);
 
       // Update recipe
       const { error: updateError } = await supabase
@@ -163,6 +165,8 @@ export const createRecipeImport = async (
         .eq("id", recipeImport.id);
     }
   })();
+
+  waitUntil(backgroundWork);
 
   return {
     recipe,

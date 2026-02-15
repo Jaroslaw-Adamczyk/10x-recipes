@@ -50,8 +50,10 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
   const userId = data.user.id;
 
+  const { ctx } = locals.runtime;
+
   try {
-    const result = await createRecipeImport(supabase, userId, command);
+    const result = await createRecipeImport(supabase, userId, command, ctx.waitUntil.bind(ctx));
     return jsonResponse(202, result);
   } catch (error) {
     const importError = error as RecipeImportCreateError | undefined;
