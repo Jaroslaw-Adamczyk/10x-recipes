@@ -98,6 +98,7 @@ export const useRecipeCreate = ({ setItems, setError, onRefresh }: UseRecipeCrea
           error_message: result.recipe.error_message ?? null,
           created_at: result.recipe.created_at,
           updated_at: result.recipe.updated_at,
+          source_url: result.recipe.source_url,
           ingredients_preview: preview,
         };
         setItems((current) => [listItem, ...current]);

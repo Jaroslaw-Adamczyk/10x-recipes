@@ -1,6 +1,7 @@
 import type { RecipeListItemDto } from "@/types";
 import { Button } from "@/components/ui/button";
 import { StatusIndicator } from "./StatusIndicator";
+import { LinkIcon } from "@heroicons/react/16/solid";
 
 interface RecipeRowProps {
   item: RecipeListItemDto;
@@ -23,12 +24,16 @@ export const RecipeRow = ({ item, onSelect, onDelete }: RecipeRowProps) => {
       onClick={onSelect}
       onKeyDown={handleKeyDown}
       aria-label={`Open recipe ${item.title}`}
-      className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4 text-card-foreground transition hover:border-primary/40"
+      className="group flex flex-col gap-3 rounded-lg border border-border bg-card p-4 text-card-foreground transition hover:border-primary/40"
       data-testid="recipe-item"
     >
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-base font-semibold text-foreground">{item.title}</p>
+          <div className="flex items-center gap-2">
+            <p className="text-base font-semibold text-foreground">{item.title}</p>
+            {item.source_url && <LinkIcon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />}
+            <StatusIndicator status={item.status} />
+          </div>
           {item.ingredients_preview.length > 0 ? (
             <p className="mt-1 text-xs text-muted-foreground">
               {item.ingredients_preview.slice(0, 5).join(", ")}
@@ -38,11 +43,11 @@ export const RecipeRow = ({ item, onSelect, onDelete }: RecipeRowProps) => {
             <p className="mt-1 text-xs text-muted-foreground">No ingredients preview yet.</p>
           )}
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <StatusIndicator status={item.status} />
+
+        <div className="flex flex-wrap items-center gap-2 opacity-0 transition-opacity group-hover:opacity-100">
           <Button
             type="button"
-            variant="outline"
+            variant="destructive"
             size="sm"
             aria-label={`Delete recipe ${item.title}`}
             onClick={(event) => {

@@ -39,7 +39,7 @@ export const listRecipes = async (
 
   let request = supabase
     .from("recipes")
-    .select("id,title,status,error_message,created_at,updated_at,recipe_ingredients(normalized_name)")
+    .select("id,title,status,error_message,created_at,updated_at,source_url,recipe_ingredients(normalized_name)")
     .eq("user_id", userId)
     .order(DEFAULT_SORT_COLUMN, { ascending: !DEFAULT_SORT_DESC })
     .order("position", { referencedTable: "recipe_ingredients", ascending: true });
@@ -56,7 +56,9 @@ export const listRecipes = async (
     // We do this by adding !inner to the joined table name in the select.
     request = supabase
       .from("recipes")
-      .select("id,title,status,error_message,created_at,updated_at,recipe_ingredients!inner(normalized_name)")
+      .select(
+        "id,title,status,error_message,created_at,updated_at,source_url,recipe_ingredients!inner(normalized_name)"
+      )
       .eq("user_id", userId)
       .order(DEFAULT_SORT_COLUMN, { ascending: !DEFAULT_SORT_DESC })
       .order("position", { referencedTable: "recipe_ingredients", ascending: true })
@@ -82,7 +84,7 @@ export const listRecipes = async (
     const recipeIds = recipesData.map((r) => r.id);
     const { data: fullData, error: fullError } = await supabase
       .from("recipes")
-      .select("id,title,status,error_message,created_at,updated_at,recipe_ingredients(normalized_name)")
+      .select("id,title,status,error_message,created_at,updated_at,source_url,recipe_ingredients(normalized_name)")
       .in("id", recipeIds)
       .order(DEFAULT_SORT_COLUMN, { ascending: !DEFAULT_SORT_DESC })
       .order("position", { referencedTable: "recipe_ingredients", ascending: true });
@@ -104,6 +106,7 @@ export const listRecipes = async (
       error_message: item.error_message,
       created_at: item.created_at,
       updated_at: item.updated_at,
+      source_url: item.source_url,
       ingredients_preview: ingredientsPreview,
     };
 

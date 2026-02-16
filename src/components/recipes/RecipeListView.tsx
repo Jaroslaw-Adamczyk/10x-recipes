@@ -29,7 +29,7 @@ const RecipeListView = ({ initialList }: RecipeListViewProps) => {
   } = useRecipeList({ initialList });
 
   return (
-    <section className="flex flex-col gap-6">
+    <section className="flex flex-col gap-6 px-6 py-10">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Recipes</h1>

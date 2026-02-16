@@ -91,16 +91,14 @@ export class OpenRouterService {
       }
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        const message = errorData.error?.message || response.statusText;
-
-        if (response.status === 401) {
-          throw new Error("Authentication failed: Invalid OpenRouter API key.");
-        }
-
-        if (response.status === 400 && errorData.error?.metadata?.reasons) {
-          const reasons = JSON.stringify(errorData.error.metadata.reasons);
-          throw new Error(`Invalid request: ${message}. Reasons: ${reasons}`);
+        let message = response.statusText;
+        try {
+          const errorData = await response.json();
+          message = errorData.error?.message || message;
+        } catch {
+          // If response is not JSON, try to get text
+          const text = await response.text().catch(() => "");
+          if (text) message = text;
         }
 
         throw new Error(`OpenRouter API error (${response.status}): ${message}`);
