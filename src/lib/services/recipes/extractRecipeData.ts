@@ -84,9 +84,8 @@ export const extractRecipeData = async (content: string): Promise<ExtractedRecip
       content: `Extract the recipe from the following content:\n\n${sanitizedContent}`,
     },
   ];
-  console.log(messages);
+
   try {
-    console.log("extracting data");
     return await openRouterService.extractData<ExtractedRecipe>({
       model: "google/gemini-2.5-flash-lite",
       messages,

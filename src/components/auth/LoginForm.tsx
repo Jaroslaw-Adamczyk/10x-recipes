@@ -1,7 +1,17 @@
 import * as React from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormField } from "./FormField";
 import { SubmitButton } from "./SubmitButton";
+
+const loginSchema = z.object({
+  email: z.string().min(1, "Email is required").email("Please enter a valid email address"),
+  password: z.string().min(1, "Password is required"),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
 
 interface LoginFormProps {
   redirectTo?: string;
@@ -9,37 +19,24 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ redirectTo = "/", initialError }: LoginFormProps) {
-  const [email, setEmail] = React.useState("");
-  const [password, setPassword] = React.useState("");
-  const [errors, setErrors] = React.useState<Record<string, string>>({});
   const [formError, setFormError] = React.useState(initialError || "");
   const [isLoading, setIsLoading] = React.useState(false);
 
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setError,
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
 
-    if (!email) {
-      newErrors.email = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = "Please enter a valid email address";
-    }
-
-    if (!password) {
-      newErrors.password = "Password is required";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (values: LoginFormValues) => {
     setFormError("");
-
-    if (!validateForm()) {
-      return;
-    }
-
     setIsLoading(true);
 
     try {
@@ -48,23 +45,21 @@ export function LoginForm({ redirectTo = "/", initialError }: LoginFormProps) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(values),
       });
 
       const data = await response.json();
-      console.log(data);
 
       if (!response.ok) {
-        // Handle Zod array-based field errors
+        // Handle Zod array-based field errors from backend
         if (data.error?.fields) {
-          const fieldErrors: Record<string, string> = {};
           Object.entries(data.error.fields).forEach(([key, value]) => {
-            // Zod returns arrays of error messages, take the first one
-            if (Array.isArray(value) && value.length > 0) {
-              fieldErrors[key] = value[0];
-            }
+            const message = Array.isArray(value) ? value[0] : value;
+            setError(key as keyof LoginFormValues, {
+              type: "manual",
+              message: message as string,
+            });
           });
-          setErrors(fieldErrors);
         }
         setFormError(data.error?.message || "Unable to connect. Please try again.");
         setIsLoading(false);
@@ -72,7 +67,7 @@ export function LoginForm({ redirectTo = "/", initialError }: LoginFormProps) {
       }
 
       // Success - redirect to target page
-      window.location.href = redirectTo;
+      window.location.assign(redirectTo);
     } catch {
       setFormError("Unable to connect. Please try again.");
       setIsLoading(false);
@@ -81,11 +76,12 @@ export function LoginForm({ redirectTo = "/", initialError }: LoginFormProps) {
 
   return (
     <Card className="w-full max-w-md">
-      <CardHeader>
-        <CardTitle>Login</CardTitle>
-        <CardDescription>Enter your credentials to access your recipes</CardDescription>
-      </CardHeader>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
+        <CardHeader>
+          <CardTitle>Login</CardTitle>
+          <CardDescription>Enter your credentials to access your recipes</CardDescription>
+        </CardHeader>
+
         <CardContent className="space-y-4">
           {formError && (
             <div
@@ -98,16 +94,9 @@ export function LoginForm({ redirectTo = "/", initialError }: LoginFormProps) {
 
           <FormField
             label="Email"
-            name="email"
             type="email"
-            value={email}
-            onChange={(value) => {
-              setEmail(value);
-              if (errors.email) {
-                setErrors((prev) => ({ ...prev, email: "" }));
-              }
-            }}
-            error={errors.email}
+            {...register("email")}
+            error={errors.email?.message}
             required
             autoComplete="email"
             placeholder="you@example.com"
@@ -115,21 +104,15 @@ export function LoginForm({ redirectTo = "/", initialError }: LoginFormProps) {
 
           <FormField
             label="Password"
-            name="password"
             type="password"
-            value={password}
-            onChange={(value) => {
-              setPassword(value);
-              if (errors.password) {
-                setErrors((prev) => ({ ...prev, password: "" }));
-              }
-            }}
-            error={errors.password}
+            {...register("password")}
+            error={errors.password?.message}
             required
             autoComplete="current-password"
             placeholder="Enter your password"
           />
         </CardContent>
+
         <CardFooter className="flex flex-col space-y-4">
           <SubmitButton label="Login" loadingLabel="Logging in..." isLoading={isLoading} />
           <p className="text-sm text-muted-foreground text-center">

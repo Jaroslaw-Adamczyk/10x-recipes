@@ -1,53 +1,49 @@
 import * as React from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormField } from "./FormField";
 import { SubmitButton } from "./SubmitButton";
+
+const registerSchema = z
+  .object({
+    email: z.string().min(1, "Email is required").email("Please enter a valid email address"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    confirmPassword: z.string().min(1, "Please confirm your password"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+
+type RegisterFormValues = z.infer<typeof registerSchema>;
 
 interface RegisterFormProps {
   redirectTo?: string;
 }
 
 export function RegisterForm({ redirectTo = "/" }: RegisterFormProps) {
-  const [email, setEmail] = React.useState("");
-  const [password, setPassword] = React.useState("");
-  const [confirmPassword, setConfirmPassword] = React.useState("");
-  const [errors, setErrors] = React.useState<Record<string, string>>({});
   const [formError, setFormError] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(false);
 
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setError,
+    resetField,
+  } = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
 
-    if (!email) {
-      newErrors.email = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = "Please enter a valid email address";
-    }
-
-    if (!password) {
-      newErrors.password = "Password is required";
-    } else if (password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
-    }
-
-    if (!confirmPassword) {
-      newErrors.confirmPassword = "Please confirm your password";
-    } else if (password !== confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (values: RegisterFormValues) => {
     setFormError("");
-
-    if (!validateForm()) {
-      return;
-    }
-
     setIsLoading(true);
 
     try {
@@ -56,41 +52,51 @@ export function RegisterForm({ redirectTo = "/" }: RegisterFormProps) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({
+          email: values.email,
+          password: values.password,
+        }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
         if (data.error?.fields) {
-          setErrors(data.error.fields);
+          // Map backend field errors to react-hook-form
+          Object.entries(data.error.fields).forEach(([field, message]) => {
+            setError(field as keyof RegisterFormValues, {
+              type: "manual",
+              message: message as string,
+            });
+          });
         }
         setFormError(data.error?.message || "Unable to create account. Please try again.");
 
         // Clear passwords on error
-        setPassword("");
-        setConfirmPassword("");
+        resetField("password");
+        resetField("confirmPassword");
         setIsLoading(false);
         return;
       }
 
       // Success - redirect to target page
-      window.location.href = redirectTo;
+      window.location.assign(redirectTo);
     } catch {
       setFormError("Unable to create account. Please try again.");
-      setPassword("");
-      setConfirmPassword("");
+      resetField("password");
+      resetField("confirmPassword");
       setIsLoading(false);
     }
   };
 
   return (
     <Card className="w-full max-w-md">
-      <CardHeader>
-        <CardTitle>Create an account</CardTitle>
-        <CardDescription>Enter your details to get started with 10x Recipes</CardDescription>
-      </CardHeader>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6" noValidate>
+        <CardHeader>
+          <CardTitle>Create an account</CardTitle>
+          <CardDescription>Enter your details to get started with 10x Recipes</CardDescription>
+        </CardHeader>
+
         <CardContent className="space-y-4">
           {formError && (
             <div
@@ -101,60 +107,46 @@ export function RegisterForm({ redirectTo = "/" }: RegisterFormProps) {
             </div>
           )}
 
-          <FormField
-            label="Email"
-            name="email"
-            type="email"
-            value={email}
-            onChange={(value) => {
-              setEmail(value);
-              if (errors.email) {
-                setErrors((prev) => ({ ...prev, email: "" }));
-              }
-            }}
-            error={errors.email}
-            required
-            autoComplete="email"
-            placeholder="you@example.com"
-          />
+          <div className="space-y-2">
+            <FormField
+              label="Email"
+              type="email"
+              {...register("email")}
+              error={errors.email?.message}
+              required
+              autoComplete="email"
+              placeholder="you@example.com"
+            />
+          </div>
 
-          <FormField
-            label="Password"
-            name="password"
-            type="password"
-            value={password}
-            onChange={(value) => {
-              setPassword(value);
-              if (errors.password) {
-                setErrors((prev) => ({ ...prev, password: "" }));
-              }
-            }}
-            error={errors.password}
-            required
-            autoComplete="new-password"
-            placeholder="At least 8 characters"
-          />
+          <div className="space-y-2">
+            <FormField
+              label="Password"
+              type="password"
+              {...register("password")}
+              error={errors.password?.message}
+              required
+              autoComplete="new-password"
+              placeholder="At least 8 characters"
+            />
+          </div>
 
-          <FormField
-            label="Confirm Password"
-            name="confirmPassword"
-            type="password"
-            value={confirmPassword}
-            onChange={(value) => {
-              setConfirmPassword(value);
-              if (errors.confirmPassword) {
-                setErrors((prev) => ({ ...prev, confirmPassword: "" }));
-              }
-            }}
-            error={errors.confirmPassword}
-            required
-            autoComplete="new-password"
-            placeholder="Confirm your password"
-          />
+          <div className="space-y-2">
+            <FormField
+              label="Confirm Password"
+              type="password"
+              {...register("confirmPassword")}
+              error={errors.confirmPassword?.message}
+              required
+              autoComplete="new-password"
+              placeholder="Confirm your password"
+            />
+          </div>
         </CardContent>
 
         <CardFooter className="flex flex-col space-y-4">
           <SubmitButton label="Create Account" loadingLabel="Creating account..." isLoading={isLoading} />
+
           <p className="text-sm text-muted-foreground text-center">
             Already have an account?{" "}
             <a href="/auth/login" className="text-primary hover:underline font-medium">

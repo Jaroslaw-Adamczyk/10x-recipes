@@ -10,7 +10,7 @@ const redirectTo = Astro.url.searchParams.get("redirectTo") || "/";
 ---
 
 <Layout title="Register - 10x Recipes">
-  <main class="min-h-screen flex items-center justify-center p-4 bg-muted/30">
+  <main class="min-h-screen flex items-center justify-center p-4">
     <RegisterForm client:load redirectTo={redirectTo} />
   </main>
 </Layout>
