@@ -14,7 +14,7 @@ export class OpenRouterService {
   #siteName: string;
 
   constructor(config: OpenRouterConfig = {}) {
-    this.#apiKey = config.apiKey || import.meta.env.OPENROUTER_API_KEY || "";
+    this.#apiKey = config.apiKey || import.meta.env.OPENROUTER_API_KEY;
     this.#baseUrl = config.baseUrl || "https://openrouter.ai/api/v1";
     this.#siteUrl = config.siteUrl || "http://localhost:3000";
     this.#siteName = config.siteName || "10x Recipes";

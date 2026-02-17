@@ -1,14 +1,11 @@
 import { useRef, useState } from "react";
 
-import { Button } from "@/components/ui/button";
 import { DeleteConfirmationDialog } from "@/components/recipes/DeleteConfirmationDialog";
 import { EditRecipeModal } from "@/components/recipes/EditRecipeModal";
 import type { RecipeDetailDto, RecipeUpdateCommand, RecipeUpdateResultDto } from "@/types";
 
 import { useRecipeDetail } from "./hooks/useRecipeDetail";
 import { RecipeHeader } from "./detail/RecipeHeader";
-import { RecipeStatusBadge } from "./detail/RecipeStatusBadge";
-import { RecipeMetaPanel } from "./detail/RecipeMetaPanel";
 import { RecipeIngredientsSection } from "./detail/RecipeIngredientsSection";
 import { RecipeStepsSection } from "./detail/RecipeStepsSection";
 import { ErrorBanner } from "./detail/ErrorBanner";
@@ -24,10 +21,7 @@ interface UpdateError {
 }
 
 const RecipeDetailView = ({ initialDetail, recipeId }: RecipeDetailViewProps) => {
-  const { detail, setDetail, error, setError, viewModel, refresh, isRefreshing } = useRecipeDetail(
-    recipeId,
-    initialDetail
-  );
+  const { detail, setDetail, error, setError, viewModel, refresh } = useRecipeDetail(recipeId, initialDetail);
   const lastUpdateCommandRef = useRef<RecipeUpdateCommand | null>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -108,15 +102,7 @@ const RecipeDetailView = ({ initialDetail, recipeId }: RecipeDetailViewProps) =>
   };
 
   return (
-    <section className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <a className="text-sm font-medium text-primary hover:underline" href="/">
-          Back to recipes
-        </a>
-        <Button size="sm" variant="outline" onClick={refresh} disabled={isRefreshing}>
-          {isRefreshing ? "Refreshing..." : "Refresh"}
-        </Button>
-      </div>
+    <div className="flex flex-col gap-6 px-6 py-10">
       <ErrorBanner
         error={error}
         onDismiss={() => setError(null)}
@@ -129,8 +115,7 @@ const RecipeDetailView = ({ initialDetail, recipeId }: RecipeDetailViewProps) =>
         onRetryDelete={error?.context === "delete" ? handleDeleteConfirmed : undefined}
       />
       <RecipeHeader recipe={viewModel.recipe} onDelete={handleDelete} onEdit={handleEdit} />
-      <RecipeStatusBadge status={viewModel.recipe.status} importMeta={viewModel.importMeta} />
-      <RecipeMetaPanel recipe={viewModel.recipe} importMeta={viewModel.importMeta} />
+      {/* <RecipeMetaPanel recipe={viewModel.recipe} importMeta={viewModel.importMeta} /> */}
       <RecipeIngredientsSection ingredients={viewModel.ingredients} />
       <RecipeStepsSection steps={viewModel.steps} />
       <EditRecipeModal
@@ -147,7 +132,7 @@ const RecipeDetailView = ({ initialDetail, recipeId }: RecipeDetailViewProps) =>
         onClose={() => setIsDeleteOpen(false)}
         isDeleting={isDeleting}
       />
-    </section>
+    </div>
   );
 };
 

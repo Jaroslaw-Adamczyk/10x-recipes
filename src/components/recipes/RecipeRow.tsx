@@ -24,7 +24,7 @@ export const RecipeRow = ({ item, onSelect, onDelete }: RecipeRowProps) => {
       onClick={onSelect}
       onKeyDown={handleKeyDown}
       aria-label={`Open recipe ${item.title}`}
-      className="group flex flex-col gap-3 rounded-lg border border-border bg-card p-4 text-card-foreground transition hover:border-primary/40"
+      className="group flex cursor-pointer flex-col gap-3 rounded-lg border border-border bg-card p-4 text-card-foreground transition hover:border-primary/40"
       data-testid="recipe-item"
     >
       <div className="flex items-start justify-between gap-3">
