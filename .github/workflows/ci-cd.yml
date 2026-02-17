@@ -115,8 +115,7 @@ jobs:
       - name: Build project
         run: npm run build
         env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+
           NODE_ENV: production
 
       - name: Upload build artifact
@@ -125,11 +124,37 @@ jobs:
           name: dist
           path: dist/
 
+  deploy-migrations:
+    name: Deploy Migrations
+    runs-on: ubuntu-latest
+    environment: Production
+    env:
+      SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+    needs: [build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link Supabase project
+        run: supabase link --project-ref ${{ secrets.SUPABASE_PROJECT_ID }}
+      - name: Push migrations
+        run: supabase db push 
+
+
+
   deploy:
     name: Deploy 
     runs-on: ubuntu-latest
     environment: Production
-    needs: [build]
+    needs: [deploy-migrations]
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
 
     steps:

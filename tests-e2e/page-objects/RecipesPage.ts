@@ -42,8 +42,9 @@ export class RecipesPage {
   async openAddRecipeModal() {
     await expect(this.addRecipeButton).toBeVisible();
     await expect(this.addRecipeButton).toBeEnabled();
-    await this.page.waitForTimeout(100);
+    await this.page.waitForTimeout(300);
     await this.addRecipeButton.click();
+    await this.page.waitForTimeout(100);
     await this.addRecipeModal.expectModalToBeVisible();
   }
 
