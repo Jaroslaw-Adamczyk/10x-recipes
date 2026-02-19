@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import type { RecipeDto } from "@/types";
 import { formatCookTime } from "@/components/recipes/utils/formatters";
 import { StatusIndicator } from "../StatusIndicator";
-import { LinkIcon } from "@heroicons/react/16/solid";
+import { SourceLink } from "../SourceLink";
 
 interface RecipeHeaderProps {
   recipe: RecipeDto;
@@ -16,9 +16,9 @@ export const RecipeHeader = ({ recipe, onEdit, onDelete }: RecipeHeaderProps) =>
       <div className="flex items-center gap-2">
         <h1 className="text-3xl font-semibold text-foreground">{recipe.title}</h1>
 
-        {recipe.source_url && <LinkIcon className="h-5 w-5 text-muted-foreground" aria-hidden="true" />}
+        {recipe.source_url && <SourceLink url={recipe.source_url} size="lg" />}
 
-        <StatusIndicator status={recipe.status} />
+        <StatusIndicator status={recipe.status} size="lg" />
       </div>
 
       {recipe.cook_time_minutes !== null ? (
@@ -28,7 +28,7 @@ export const RecipeHeader = ({ recipe, onEdit, onDelete }: RecipeHeaderProps) =>
       )}
     </div>
 
-    <div className="flex flex-wrap gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+    <div className="flex gap-2">
       <Button variant="outline" onClick={onEdit}>
         Edit
       </Button>

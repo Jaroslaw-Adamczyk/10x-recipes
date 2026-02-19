@@ -9,6 +9,7 @@ import { RecipeHeader } from "./detail/RecipeHeader";
 import { RecipeIngredientsSection } from "./detail/RecipeIngredientsSection";
 import { RecipeStepsSection } from "./detail/RecipeStepsSection";
 import { ErrorBanner } from "./detail/ErrorBanner";
+import { TooltipProvider } from "@radix-ui/react-tooltip";
 
 interface RecipeDetailViewProps {
   initialDetail: RecipeDetailDto;
@@ -102,37 +103,39 @@ const RecipeDetailView = ({ initialDetail, recipeId }: RecipeDetailViewProps) =>
   };
 
   return (
-    <div className="flex flex-col gap-6 px-6 py-10">
-      <ErrorBanner
-        error={error}
-        onDismiss={() => setError(null)}
-        onRetryLoad={refresh}
-        onRetryUpdate={
-          error?.context === "update" && lastUpdateCommandRef.current
-            ? () => handleUpdateSubmit(lastUpdateCommandRef.current as RecipeUpdateCommand)
-            : undefined
-        }
-        onRetryDelete={error?.context === "delete" ? handleDeleteConfirmed : undefined}
-      />
-      <RecipeHeader recipe={viewModel.recipe} onDelete={handleDelete} onEdit={handleEdit} />
-      {/* <RecipeMetaPanel recipe={viewModel.recipe} importMeta={viewModel.importMeta} /> */}
-      <RecipeIngredientsSection ingredients={viewModel.ingredients} />
-      <RecipeStepsSection steps={viewModel.steps} />
-      <EditRecipeModal
-        open={isEditOpen}
-        initialRecipe={detail}
-        onSubmit={handleUpdateSubmit}
-        onClose={() => setIsEditOpen(false)}
-        isSaving={isSaving}
-      />
-      <DeleteConfirmationDialog
-        open={isDeleteOpen}
-        status={detail.recipe.status}
-        onConfirm={handleDeleteConfirmed}
-        onClose={() => setIsDeleteOpen(false)}
-        isDeleting={isDeleting}
-      />
-    </div>
+    <TooltipProvider>
+      <div className="flex flex-col gap-6 px-6 py-10">
+        <ErrorBanner
+          error={error}
+          onDismiss={() => setError(null)}
+          onRetryLoad={refresh}
+          onRetryUpdate={
+            error?.context === "update" && lastUpdateCommandRef.current
+              ? () => handleUpdateSubmit(lastUpdateCommandRef.current as RecipeUpdateCommand)
+              : undefined
+          }
+          onRetryDelete={error?.context === "delete" ? handleDeleteConfirmed : undefined}
+        />
+        <RecipeHeader recipe={viewModel.recipe} onDelete={handleDelete} onEdit={handleEdit} />
+        {/* <RecipeMetaPanel recipe={viewModel.recipe} importMeta={viewModel.importMeta} /> */}
+        <RecipeIngredientsSection ingredients={viewModel.ingredients} />
+        <RecipeStepsSection steps={viewModel.steps} />
+        <EditRecipeModal
+          open={isEditOpen}
+          initialRecipe={detail}
+          onSubmit={handleUpdateSubmit}
+          onClose={() => setIsEditOpen(false)}
+          isSaving={isSaving}
+        />
+        <DeleteConfirmationDialog
+          open={isDeleteOpen}
+          status={detail.recipe.status}
+          onConfirm={handleDeleteConfirmed}
+          onClose={() => setIsDeleteOpen(false)}
+          isDeleting={isDeleting}
+        />
+      </div>
+    </TooltipProvider>
   );
 };
 

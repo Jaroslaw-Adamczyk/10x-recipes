@@ -1,7 +1,7 @@
 import type { RecipeListItemDto } from "@/types";
 import { Button } from "@/components/ui/button";
 import { StatusIndicator } from "./StatusIndicator";
-import { LinkIcon } from "@heroicons/react/16/solid";
+import { SourceLink } from "./SourceLink";
 
 interface RecipeRowProps {
   item: RecipeListItemDto;
@@ -31,7 +31,9 @@ export const RecipeRow = ({ item, onSelect, onDelete }: RecipeRowProps) => {
         <div>
           <div className="flex items-center gap-2">
             <p className="text-base font-semibold text-foreground">{item.title}</p>
-            {item.source_url && <LinkIcon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />}
+
+            {item.source_url && <SourceLink url={item.source_url} />}
+
             <StatusIndicator status={item.status} />
           </div>
           {item.ingredients_preview.length > 0 ? (

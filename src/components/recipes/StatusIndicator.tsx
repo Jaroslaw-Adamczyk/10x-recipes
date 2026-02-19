@@ -1,10 +1,18 @@
 import type { RecipeStatus } from "@/types";
 import { ArrowPathIcon, CheckCircleIcon, ExclamationCircleIcon } from "@heroicons/react/16/solid";
+import { Tooltip } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
-const iconMap: Record<RecipeStatus, React.ReactNode> = {
-  processing: <ArrowPathIcon className="h-4 w-4 animate-spin text-muted-foreground" />,
-  succeeded: <CheckCircleIcon className="h-4 w-4 text-emerald-600" />,
-  failed: <ExclamationCircleIcon className="h-4 w-4 text-destructive" />,
+const iconMap: Record<RecipeStatus, React.ElementType> = {
+  processing: ArrowPathIcon,
+  succeeded: CheckCircleIcon,
+  failed: ExclamationCircleIcon,
+};
+
+const colorMap: Record<RecipeStatus, string> = {
+  processing: "text-muted-foreground animate-spin",
+  succeeded: "text-emerald-600",
+  failed: "text-destructive",
 };
 
 const tooltipMap: Partial<Record<RecipeStatus, string>> = {
@@ -12,20 +20,28 @@ const tooltipMap: Partial<Record<RecipeStatus, string>> = {
   failed: "Recipe import failed",
 };
 
-export const StatusIndicator = ({ status }: { status: RecipeStatus }) => {
-  const tooltip = tooltipMap[status];
+const sizeMap = {
+  sm: "h-3 w-3",
+  md: "h-4 w-4",
+  lg: "h-5 w-5",
+};
 
-  return (
-    <span className="relative inline-flex items-center group/status" aria-label={tooltip ?? status}>
-      {iconMap[status]}
-      {tooltip ? (
-        <span
-          role="tooltip"
-          className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-popover px-2 py-1 text-xs font-medium text-popover-foreground shadow-md border border-border opacity-0 transition-opacity group-hover/status:opacity-100"
-        >
-          {tooltip}
-        </span>
-      ) : null}
+interface StatusIndicatorProps {
+  status: RecipeStatus;
+  size?: keyof typeof sizeMap;
+}
+
+export const StatusIndicator = ({ status, size = "md" }: StatusIndicatorProps) => {
+  const tooltip = tooltipMap[status];
+  const Icon = iconMap[status];
+
+  const content = (
+    <span className="relative inline-flex items-center" aria-label={tooltip ?? status}>
+      <Icon className={cn(sizeMap[size], colorMap[status])} />
     </span>
   );
+
+  if (!tooltip) return content;
+
+  return <Tooltip content={tooltip}>{content}</Tooltip>;
 };
