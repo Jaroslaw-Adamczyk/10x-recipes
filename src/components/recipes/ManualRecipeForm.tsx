@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { AutoGrowingTextarea } from "@/components/ui/auto-growing-textarea";
 import type { RecipeCreateCommand } from "@/types";
 import { normalizeIngredientName, normalizeText } from "./utils/recipeListUtils";
 
@@ -113,26 +114,26 @@ export const ManualRecipeForm = ({ onSubmit, onCancel, isSubmitting, error, onDi
       <label className="text-sm font-medium text-foreground" htmlFor="manual-ingredients">
         Ingredients (one per line)
       </label>
-      <textarea
+      <AutoGrowingTextarea
         id="manual-ingredients"
-        className="min-h-[120px] rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         value={ingredients}
         onChange={(event) => setIngredients(event.target.value)}
         placeholder="1 cup flour"
         disabled={isSubmitting}
         data-testid="input-recipe-ingredients"
+        className="max-h-[400px]"
       />
       <label className="text-sm font-medium text-foreground" htmlFor="manual-steps">
         Steps (one per line)
       </label>
-      <textarea
+      <AutoGrowingTextarea
         id="manual-steps"
-        className="min-h-[120px] rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         value={steps}
         onChange={(event) => setSteps(event.target.value)}
         placeholder="Mix the batter"
         disabled={isSubmitting}
         data-testid="input-recipe-steps"
+        className="max-h-[400px]"
       />
       <label className="text-sm font-medium text-foreground" htmlFor="manual-cooktime">
         Cook time (minutes)

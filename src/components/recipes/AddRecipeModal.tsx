@@ -45,54 +45,56 @@ export const AddRecipeModal = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-8"
+      className="fixed inset-0 z-50 flex items-center justify-center  bg-black/40 px-4 py-8"
       role="dialog"
       aria-modal="true"
       aria-labelledby="add-recipe-title"
       aria-describedby="add-recipe-description"
       data-testid="add-recipe-modal"
     >
-      <div className="w-full max-w-lg rounded-lg border border-border bg-background p-6 text-foreground shadow-lg">
-        <h2 className="text-lg font-semibold" id="add-recipe-title">
-          Add a recipe
-        </h2>
-        <p className="mt-2 text-sm text-muted-foreground" id="add-recipe-description">
-          Import a recipe URL or enter the recipe manually.
-        </p>
-        <div className="mt-4 flex flex-wrap gap-2">
-          <Button
-            variant={tab === "import" ? "default" : "outline"}
-            onClick={() => setTab("import")}
-            data-testid="tab-import"
-          >
-            Import URL
-          </Button>
-          <Button
-            variant={tab === "manual" ? "default" : "outline"}
-            onClick={() => setTab("manual")}
-            data-testid="tab-manual"
-          >
-            Manual entry
-          </Button>
-        </div>
-        <div className="mt-6">
-          {tab === "import" ? (
-            <ImportRecipeForm
-              onSubmit={(command) => onImport(command)}
-              onCancel={handleClose}
-              isSubmitting={isSubmitting}
-              error={importError}
-              onDirtyChange={setImportDirty}
-            />
-          ) : (
-            <ManualRecipeForm
-              onSubmit={(command) => onCreate(command)}
-              onCancel={handleClose}
-              isSubmitting={isSubmitting}
-              error={createError}
-              onDirtyChange={setManualDirty}
-            />
-          )}
+      <div className="max-w-4xl w-full rounded-lg border border-border bg-background text-foreground shadow-lg max-h-10/12 overflow-hidden flex flex-col">
+        <div className="p-6 overflow-auto">
+          <span className="text-xl font-semibold" id="add-recipe-title">
+            Add a recipe
+          </span>
+          <p className="mt-2 text-sm text-muted-foreground" id="add-recipe-description">
+            Import a recipe URL or enter the recipe manually.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button
+              variant={tab === "import" ? "default" : "outline"}
+              onClick={() => setTab("import")}
+              data-testid="tab-import"
+            >
+              Import URL
+            </Button>
+            <Button
+              variant={tab === "manual" ? "default" : "outline"}
+              onClick={() => setTab("manual")}
+              data-testid="tab-manual"
+            >
+              Manual entry
+            </Button>
+          </div>
+          <div className="mt-6">
+            {tab === "import" ? (
+              <ImportRecipeForm
+                onSubmit={(command) => onImport(command)}
+                onCancel={handleClose}
+                isSubmitting={isSubmitting}
+                error={importError}
+                onDirtyChange={setImportDirty}
+              />
+            ) : (
+              <ManualRecipeForm
+                onSubmit={(command) => onCreate(command)}
+                onCancel={handleClose}
+                isSubmitting={isSubmitting}
+                error={createError}
+                onDirtyChange={setManualDirty}
+              />
+            )}
+          </div>
         </div>
       </div>
     </div>
