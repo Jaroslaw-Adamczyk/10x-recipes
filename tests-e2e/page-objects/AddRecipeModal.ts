@@ -13,7 +13,6 @@ export class AddRecipeModal {
   readonly importTab: Locator;
   readonly manualTab: Locator;
   readonly titleInput: Locator;
-  readonly ingredientsInput: Locator;
   readonly stepsInput: Locator;
   readonly cookTimeInput: Locator;
   readonly cancelButton: Locator;
@@ -28,7 +27,6 @@ export class AddRecipeModal {
     this.importTab = page.getByTestId("tab-import");
     this.manualTab = page.getByTestId("tab-manual");
     this.titleInput = page.getByTestId("input-recipe-title");
-    this.ingredientsInput = page.getByTestId("input-recipe-ingredients");
     this.stepsInput = page.getByTestId("input-recipe-steps");
     this.cookTimeInput = page.getByTestId("input-recipe-cooktime");
     this.cancelButton = page.getByTestId("button-cancel");
@@ -58,7 +56,19 @@ export class AddRecipeModal {
 
   async fillManualRecipe(recipe: RecipeData) {
     await this.titleInput.fill(recipe.title);
-    await this.ingredientsInput.fill(recipe.ingredients);
+
+    // Fill ingredients
+    const ingredientLines = recipe.ingredients.split("\n").filter((line) => line.trim() !== "");
+    for (let i = 0; i < ingredientLines.length; i++) {
+      const ingredientInput = this.page.getByTestId(`input-recipe-ingredient-${i}`);
+
+      if (i > 0) {
+        const prevInput = this.page.getByTestId(`input-recipe-ingredient-${i - 1}`);
+        await prevInput.press("Enter");
+      }
+      await ingredientInput.fill(ingredientLines[i]);
+    }
+
     await this.stepsInput.fill(recipe.steps);
 
     if (recipe.cookTime) {
