@@ -1,12 +1,15 @@
 # View Implementation Plan Recipe Detail
 
 ## 1. Overview
+
 Recipe Detail shows the full structured recipe (ingredients, steps, cook time) plus import/source metadata and status. It lets users edit or delete a recipe while keeping the list view concise.
 
 ## 2. View Routing
+
 Route: `/recipes/:id` (Astro page `src/pages/recipes/[id].astro`).
 
 ## 3. Component Structure
+
 - `RecipeDetailPage`
 - `RecipeDetailView`
 - `RecipeHeader`
@@ -19,7 +22,9 @@ Route: `/recipes/:id` (Astro page `src/pages/recipes/[id].astro`).
 - `ErrorBanner`
 
 ## 4. Component Details
-### RecipeDetailPage 
+
+### RecipeDetailPage
+
 - Component description: Page wrapper that loads initial recipe detail
 - Main elements: Layout wrapper, `RecipeDetailView`.
 - Validation conditions: validate `id` param as UUID; redirect to not-found state if invalid.
@@ -27,6 +32,7 @@ Route: `/recipes/:id` (Astro page `src/pages/recipes/[id].astro`).
 - Props: none.
 
 ### RecipeDetailView
+
 - Component description: Main interactive shell for detail view with edit/delete actions.
 - Main elements: back link, header, status badge, metadata panel, ingredients list, steps list, action buttons, error banner.
 - Handled interactions: refresh, open edit, submit edit, open delete, confirm delete, dismiss error.
@@ -37,6 +43,7 @@ Route: `/recipes/:id` (Astro page `src/pages/recipes/[id].astro`).
   - `recipeId: string`
 
 ### RecipeHeader
+
 - Component description: Displays title, cook time, and main actions (Edit/Delete).
 - Main elements: `h1`, cook time text, action buttons.
 - Handled interactions: click edit, click delete.
@@ -48,6 +55,7 @@ Route: `/recipes/:id` (Astro page `src/pages/recipes/[id].astro`).
   - `onDelete(): void`
 
 ### RecipeStatusBadge
+
 - Component description: Visual indicator for processing/succeeded/failed with optional retry context.
 - Main elements: status chip, optional error text.
 - Handled interactions: none.
@@ -58,6 +66,7 @@ Route: `/recipes/:id` (Astro page `src/pages/recipes/[id].astro`).
   - `importMeta: RecipeImportDto | null`
 
 ### RecipeMetaPanel
+
 - Component description: Shows source URL, status details, timestamps, and error message if any.
 - Main elements: definition list, external link to source URL.
 - Handled interactions: open source URL in new tab.
@@ -68,6 +77,7 @@ Route: `/recipes/:id` (Astro page `src/pages/recipes/[id].astro`).
   - `importMeta: RecipeImportDto | null`
 
 ### RecipeIngredientsSection
+
 - Component description: Full ingredients list with proper list semantics.
 - Main elements: section heading, `ul` with `li`.
 - Handled interactions: none.
@@ -77,6 +87,7 @@ Route: `/recipes/:id` (Astro page `src/pages/recipes/[id].astro`).
   - `ingredients: RecipeIngredientDto[]`
 
 ### RecipeStepsSection
+
 - Component description: Full steps list with ordered list.
 - Main elements: section heading, `ol` with `li`.
 - Handled interactions: none.
@@ -86,6 +97,7 @@ Route: `/recipes/:id` (Astro page `src/pages/recipes/[id].astro`).
   - `steps: RecipeStepDto[]`
 
 ### EditRecipeModal
+
 - Component description: Prefilled form for updating recipe title, cook time, ingredients, steps, and ordering.
 - Main elements: dialog, inputs, textareas, reorder controls, submit/cancel buttons.
 - Handled interactions: add/remove rows, reorder, submit, cancel.
@@ -104,6 +116,7 @@ Route: `/recipes/:id` (Astro page `src/pages/recipes/[id].astro`).
   - `onClose(): void`
 
 ### DeleteConfirmationDialog
+
 - Component description: Confirms permanent delete for non-failed recipes.
 - Main elements: dialog content, confirm/cancel buttons.
 - Handled interactions: confirm, cancel.
@@ -116,6 +129,7 @@ Route: `/recipes/:id` (Astro page `src/pages/recipes/[id].astro`).
   - `onClose(): void`
 
 ### ErrorBanner
+
 - Component description: Dismissible error banner for API failures.
 - Main elements: alert container, message, dismiss button.
 - Handled interactions: dismiss.
@@ -126,13 +140,16 @@ Route: `/recipes/:id` (Astro page `src/pages/recipes/[id].astro`).
   - `onDismiss(): void`
 
 ## 5. Types
+
 Use existing DTOs and add view models:
+
 - `RecipeDetailDto`: `{ recipe, ingredients, steps, import }`.
 - `RecipeUpdateCommand`: partial fields for PATCH (title, cook_time_minutes, ingredients, steps).
 - `RecipeIngredientUpsertCommand`: `{ id?: string | null, raw_text: string, normalized_name: string, position?: number | null }`.
 - `RecipeStepUpsertCommand`: `{ id?: string | null, step_text: string, position: number }`.
 
 New view models:
+
 - `RecipeDetailViewModel`
   - `recipeId: string`
   - `title: string`
@@ -152,6 +169,7 @@ New view models:
   - `context?: "load" | "update" | "delete"`
 
 ## 6. State Management
+
 - Local state in `RecipeDetailView`:
   - `detail: RecipeDetailDto | null`
   - `isLoading: boolean`
@@ -163,6 +181,7 @@ New view models:
 - Optional custom hook `useRecipeDetail(recipeId)` to load data, refresh, and normalize view model; returns `{ detail, viewModel, loading, error, reload }`.
 
 ## 7. API Integration
+
 - GET `/api/recipes/:id`
   - Response: `RecipeDetailDto`
   - Use for initial load and refresh after updates.
@@ -175,6 +194,7 @@ New view models:
   - If success, navigate back to `/`.
 
 ## 8. User Interactions
+
 - Back to list: link to `/`.
 - Edit recipe:
   - Open modal with prefilled values.
@@ -186,6 +206,7 @@ New view models:
 - View metadata: show source URL and status details.
 
 ## 9. Conditions and Validation
+
 - UUID route param required; show not-found state on invalid.
 - Edit form:
   - Title required if provided.
@@ -197,6 +218,7 @@ New view models:
 - Delete confirmation skipped for failed status.
 
 ## 10. Error Handling
+
 - 400/404 on GET: show not-found state with link back.
 - 401: show generic error banner (auth UI is omitted per MVP).
 - 409 on PATCH: show inline form error (duplicate source URL if ever used).
@@ -204,6 +226,7 @@ New view models:
 - Network errors: keep existing detail, show dismissible banner.
 
 ## 11. Implementation Steps
+
 1. Create `src/pages/recipes/[id].astro` and load initial recipe detail via GET.
 2. Add `RecipeDetailView` React component with props for initial detail and `recipeId`.
 3. Build `RecipeHeader`, `RecipeStatusBadge`, `RecipeMetaPanel`, `RecipeIngredientsSection`, and `RecipeStepsSection`.

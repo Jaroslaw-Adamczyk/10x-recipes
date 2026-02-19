@@ -23,6 +23,7 @@ tests-e2e/
 ## 🎯 Page Object Model (POM)
 
 The Page Object Model pattern provides:
+
 - **Separation of concerns** - Test logic separated from page interactions
 - **Reusability** - Page objects can be used across multiple tests
 - **Maintainability** - UI changes only require updating page objects
@@ -33,6 +34,7 @@ The Page Object Model pattern provides:
 Handles all login page interactions.
 
 **Locators:**
+
 - `emailInput` - Email input field (`data-test-id="input-email"`)
 - `passwordInput` - Password input field (`data-test-id="input-password"`)
 - `submitButton` - Submit button (`data-test-id="submit-button"`)
@@ -40,6 +42,7 @@ Handles all login page interactions.
 - `registerLink` - Link to registration page
 
 **Methods:**
+
 - `goto()` - Navigate to login page
 - `login(email, password)` - Fill credentials and submit
 - `waitForRedirect(url)` - Wait for redirect after login
@@ -47,10 +50,11 @@ Handles all login page interactions.
 - `expectFormError(message)` - Assert error message
 
 **Example:**
+
 ```typescript
 await loginPage.goto();
-await loginPage.login('test@example.com', 'password123');
-await loginPage.waitForRedirect('/');
+await loginPage.login("test@example.com", "password123");
+await loginPage.waitForRedirect("/");
 ```
 
 ### RecipesPage
@@ -58,6 +62,7 @@ await loginPage.waitForRedirect('/');
 Handles recipe list page interactions and contains AddRecipeModal.
 
 **Locators:**
+
 - `addRecipeButton` - Button to open add recipe modal
 - `refreshButton` - Button to refresh recipes
 - `searchInput` - Search input field
@@ -70,6 +75,7 @@ Handles recipe list page interactions and contains AddRecipeModal.
 - `addRecipeModal` - Instance of AddRecipeModal
 
 **Methods:**
+
 - `goto()` - Navigate to recipes page
 - `expectToBeOnRecipesPage()` - Assert on recipes page
 - `openAddRecipeModal()` - Click add button and verify modal opens
@@ -88,10 +94,11 @@ Handles recipe list page interactions and contains AddRecipeModal.
 - `dismissError()` - Dismiss error banner
 
 **Example:**
+
 ```typescript
 await recipesPage.expectToBeOnRecipesPage();
 await recipesPage.openAddRecipeModal();
-await recipesPage.expectRecipeInList('My Recipe');
+await recipesPage.expectRecipeInList("My Recipe");
 ```
 
 ### AddRecipeModal
@@ -99,6 +106,7 @@ await recipesPage.expectRecipeInList('My Recipe');
 Handles add recipe modal interactions (nested in RecipesPage).
 
 **Locators:**
+
 - `modal` - Modal container (`data-test-id="add-recipe-modal"`)
 - `importTab` - Import URL tab (`data-test-id="tab-import"`)
 - `manualTab` - Manual entry tab (`data-test-id="tab-manual"`)
@@ -113,6 +121,7 @@ Handles add recipe modal interactions (nested in RecipesPage).
 - `errorMessage` - Validation error message
 
 **Methods:**
+
 - `expectModalToBeVisible()` - Assert modal is open
 - `expectModalToBeHidden()` - Assert modal is closed
 - `switchToManualEntry()` - Switch to manual tab
@@ -126,13 +135,14 @@ Handles add recipe modal interactions (nested in RecipesPage).
 - `handleCancelDialog(accept)` - Set up dialog handler for cancel confirmation
 
 **Example:**
+
 ```typescript
 await recipesPage.addRecipeModal.switchToManualEntry();
 await recipesPage.addRecipeModal.fillManualRecipe({
-  title: 'Chocolate Chip Cookies',
-  ingredients: '2 cups flour\n1 cup sugar',
-  steps: 'Mix ingredients\nBake for 10 minutes',
-  cookTime: '10'
+  title: "Chocolate Chip Cookies",
+  ingredients: "2 cups flour\n1 cup sugar",
+  steps: "Mix ingredients\nBake for 10 minutes",
+  cookTime: "10",
 });
 await recipesPage.addRecipeModal.createRecipe();
 ```
@@ -142,16 +152,19 @@ await recipesPage.addRecipeModal.createRecipe();
 The `test-data.ts` file provides reusable test data and helpers.
 
 **Constants:**
+
 - `TEST_USER` - Default test user credentials
 - `SAMPLE_RECIPES` - Pre-defined recipe data
 
 **Functions:**
+
 - `generateRecipeTitle(baseName)` - Generate unique title with timestamp
 - `createUniqueRecipe(baseRecipe)` - Clone recipe with unique title
 
 **Example:**
+
 ```typescript
-import { TEST_USER, SAMPLE_RECIPES, createUniqueRecipe } from './test-data';
+import { TEST_USER, SAMPLE_RECIPES, createUniqueRecipe } from "./test-data";
 
 // Use test user
 await loginPage.login(TEST_USER.email, TEST_USER.password);
@@ -165,10 +178,11 @@ const recipe = createUniqueRecipe(SAMPLE_RECIPES.chocolateChipCookies);
 The `fixtures.ts` file extends Playwright's test fixture with page objects.
 
 **Usage:**
-```typescript
-import { test, expect } from './fixtures';
 
-test('my test', async ({ loginPage, recipesPage }) => {
+```typescript
+import { test, expect } from "./fixtures";
+
+test("my test", async ({ loginPage, recipesPage }) => {
   // Page objects are automatically instantiated
   await loginPage.goto();
   await recipesPage.expectToBeOnRecipesPage();
@@ -176,6 +190,7 @@ test('my test', async ({ loginPage, recipesPage }) => {
 ```
 
 **Benefits:**
+
 - Automatic page object instantiation
 - Clean test syntax
 - Shared page context
@@ -184,7 +199,9 @@ test('my test', async ({ loginPage, recipesPage }) => {
 ## 📝 Test Scenarios
 
 ### add-recipe.spec.ts
+
 Tests for adding recipes manually:
+
 - ✅ Complete flow: login → add recipe → verify in list
 - ✅ Create multiple recipes with different data
 - ✅ Validation: empty form
@@ -196,7 +213,9 @@ Tests for adding recipes manually:
 - ✅ Switch between import/manual tabs
 
 ### login.spec.ts
+
 Tests for authentication:
+
 - ✅ Login with valid credentials
 - ✅ Invalid email format
 - ✅ Empty fields
@@ -205,7 +224,9 @@ Tests for authentication:
 - ✅ Redirect authenticated users
 
 ### recipe-search.spec.ts
+
 Tests for search functionality:
+
 - ✅ Search by ingredient
 - ✅ No results message
 - ✅ Clear search
@@ -213,7 +234,9 @@ Tests for search functionality:
 - ✅ Empty search submission
 
 ### recipe-list.spec.ts
+
 Tests for recipe list management:
+
 - ✅ Empty state display
 - ✅ Refresh recipe list
 - ✅ Display recipe with details
@@ -224,36 +247,43 @@ Tests for recipe list management:
 ## 🚀 Running Tests
 
 ### All tests
+
 ```bash
 npm run test:e2e
 ```
 
 ### Specific test file
+
 ```bash
 npx playwright test tests-e2e/add-recipe.spec.ts
 ```
 
 ### Headed mode (see browser)
+
 ```bash
 npx playwright test --headed
 ```
 
 ### UI mode (interactive)
+
 ```bash
 npx playwright test --ui
 ```
 
 ### Debug mode
+
 ```bash
 npx playwright test --debug
 ```
 
 ### Specific test by name
+
 ```bash
 npx playwright test -g "should login and add recipe"
 ```
 
 ### Run in specific browser
+
 ```bash
 npx playwright test --project=chromium
 npx playwright test --project=firefox
@@ -263,16 +293,19 @@ npx playwright test --project=webkit
 ## 🎨 Data Test IDs Reference
 
 ### Login Components
+
 - `input-email` - Email input field
 - `input-password` - Password input field
 - `submit-button` - Login submit button
 
 ### Recipe List Components
+
 - `add-recipe-button` - Button to open Add Recipe modal
 - `recipe-list` - Recipe list container
 - `recipe-item` - Individual recipe cards
 
 ### Add Recipe Modal
+
 - `add-recipe-modal` - Modal container
 - `tab-import` - Import URL tab button
 - `tab-manual` - Manual entry tab button
@@ -286,25 +319,28 @@ npx playwright test --project=webkit
 ## 📋 Best Practices
 
 ### 1. Use Page Objects
+
 ```typescript
 // ❌ Bad - Direct page interactions in test
-await page.getByTestId('input-email').fill('test@example.com');
-await page.getByTestId('submit-button').click();
+await page.getByTestId("input-email").fill("test@example.com");
+await page.getByTestId("submit-button").click();
 
 // ✅ Good - Use page object
-await loginPage.login('test@example.com', 'password123');
+await loginPage.login("test@example.com", "password123");
 ```
 
 ### 2. Use Test Data Constants
+
 ```typescript
 // ❌ Bad - Hardcoded data
-await loginPage.login('test@example.com', 'password123');
+await loginPage.login("test@example.com", "password123");
 
 // ✅ Good - Use constants
 await loginPage.login(TEST_USER.email, TEST_USER.password);
 ```
 
 ### 3. Use Unique Data for Creation
+
 ```typescript
 // ❌ Bad - Same title every time
 const recipe = SAMPLE_RECIPES.chocolateChipCookies;
@@ -314,6 +350,7 @@ const recipe = createUniqueRecipe(SAMPLE_RECIPES.chocolateChipCookies);
 ```
 
 ### 4. Use Descriptive Assertions
+
 ```typescript
 // ❌ Bad - Generic assertion
 await expect(page.getByText(title)).toBeVisible();
@@ -323,6 +360,7 @@ await recipesPage.expectRecipeInList(title);
 ```
 
 ### 5. Use beforeEach for Common Setup
+
 ```typescript
 test.beforeEach(async ({ loginPage, recipesPage }) => {
   await loginPage.goto();
@@ -334,26 +372,33 @@ test.beforeEach(async ({ loginPage, recipesPage }) => {
 ## 🐛 Debugging Tips
 
 ### 1. Use UI Mode
+
 Best for understanding test flow:
+
 ```bash
 npx playwright test --ui
 ```
 
 ### 2. Use Debug Mode
+
 Step through test execution:
+
 ```bash
 npx playwright test --debug
 ```
 
 ### 3. Add Screenshots on Failure
+
 Already configured in `playwright.config.ts`
 
 ### 4. View Trace
+
 ```bash
 npx playwright show-trace trace.zip
 ```
 
 ### 5. Slow Down Execution
+
 ```bash
 npx playwright test --headed --slow-mo=1000
 ```
@@ -361,6 +406,7 @@ npx playwright test --headed --slow-mo=1000
 ## 🔄 CI/CD Integration
 
 Tests can be run in CI with:
+
 ```bash
 npx playwright test --reporter=github
 ```

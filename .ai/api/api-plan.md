@@ -1,6 +1,7 @@
 # REST API Plan
 
 ## 1. Resources
+
 - `recipes` → `recipes`
 - `recipe_ingredients` → `recipe_ingredients`
 - `recipe_steps` → `recipe_steps`
@@ -9,10 +10,13 @@
 - `auth_event_logs` → `auth_event_logs` (internal analytics/observability)
 
 ## 2. Endpoints
+
 Base URL: `/api`
 
 ### Recipe Imports (async)
+
 #### POST `/recipe-imports`
+
 - Description: Create an import job for a recipe URL; worker runs asynchronously.
 - Request JSON:
   - `{ "source_url": "string" }`
@@ -24,6 +28,7 @@ Base URL: `/api`
   - `409 Conflict` (duplicate `user_id + source_url`)
 
 #### GET `/recipe-imports`
+
 - Description: List import jobs for the current user.
 - Query params:
   - `status` (optional: `processing|succeeded|failed`)
@@ -35,6 +40,7 @@ Base URL: `/api`
 - Success: `200 OK`
 
 #### GET `/recipe-imports/{id}`
+
 - Description: Get a specific import job, including errors and retry info.
 - Response JSON:
   - `{ ...recipe_imports }`
@@ -43,6 +49,7 @@ Base URL: `/api`
   - `404 Not Found`
 
 #### DELETE `/recipe-imports/{id}`
+
 - Description: Delete an import job; used to clear failed imports quickly.
 - Response JSON:
   - `{ "ok": true }`
@@ -51,7 +58,9 @@ Base URL: `/api`
   - `404 Not Found`
 
 ### Recipes
+
 #### POST `/recipes`
+
 - Description: Create a recipe manually.
 - Request JSON:
   - `{ "title": "string", "cook_time_minutes": 0, "source_url": null, "ingredients": [ { "raw_text": "string", "normalized_name": "string", "position": 0 } ], "steps": [ { "step_text": "string", "position": 0 } ] }`
@@ -63,6 +72,7 @@ Base URL: `/api`
   - `409 Conflict` (duplicate `user_id + source_url` when provided)
 
 #### GET `/recipes`
+
 - Description: List recipes for the current user.
 - Query params:
   - `status` (optional: `processing|succeeded|failed`)
@@ -75,6 +85,7 @@ Base URL: `/api`
 - Success: `200 OK`
 
 #### GET `/recipes/{id}`
+
 - Description: Get full recipe details (ingredients, steps, cook time).
 - Response JSON:
   - `{ "recipe": { ...recipes }, "ingredients": [ { ...recipe_ingredients } ], "steps": [ { ...recipe_steps } ], "import": { ...recipe_imports|null } }`
@@ -83,6 +94,7 @@ Base URL: `/api`
   - `404 Not Found`
 
 #### PATCH `/recipes/{id}`
+
 - Description: Update recipe title, ingredients, steps, or cook time; creates a revision.
 - Request JSON:
   - `{ "title": "string", "cook_time_minutes": 0, "prep_time_minutes": null, "ingredients": [ { "id": "uuid|null", "raw_text": "string", "normalized_name": "string", "position": 0 } ], "steps": [ { "id": "uuid|null", "step_text": "string", "position": 0 } ] }`
@@ -94,6 +106,7 @@ Base URL: `/api`
   - `404 Not Found`
 
 #### DELETE `/recipes/{id}`
+
 - Description: Delete a recipe (with confirmation enforced by client for non-failed items).
 - Response JSON:
   - `{ "ok": true }`
@@ -125,9 +138,10 @@ Base URL: `/api`
 - Errors:
   - `403 Forbidden` (non-service role) -->
 
-
 ## 4. Validation and Business Logic
+
 ### Validation Conditions
+
 - `recipes.title`: required, non-empty.
 - `recipes.cook_time_minutes`: optional, must be `>= 0`.
 - `recipes.prep_time_minutes`: optional, must be `>= 0`.
@@ -144,6 +158,7 @@ Base URL: `/api`
 - Manual and imported recipes must have at least one ingredient and one step.
 
 ### Business Logic Implementation
+
 - Import flow:
   - `POST /recipe-imports` creates a `recipe_imports` row with `status=processing`.
   - Worker attempts extraction up to 3 times; on success, creates `recipes`, `recipe_ingredients`, `recipe_steps`, sets `recipe_imports.recipe_id`, and updates `status=succeeded`.

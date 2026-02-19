@@ -5,6 +5,7 @@
 This table will be managed by Supabase Auth
 
 ### `recipes`
+
 - `id` uuid primary key default gen_random_uuid()
 - `user_id` uuid not null references auth.users(id) on delete cascade
 - `title` text not null
@@ -17,10 +18,12 @@ This table will be managed by Supabase Auth
 - `updated_at` timestamptz not null default now()
 
 Constraints:
+
 - check (`status` in 'processing' | 'succeeded' | 'failed')
 - optional uniqueness on (`user_id`, `source_url`) where `source_url` is not null to prevent duplicate imports per user
 
 ### `recipe_ingredients`
+
 - `id` uuid primary key default gen_random_uuid()
 - `recipe_id` uuid not null references recipes(id) on delete cascade
 - `raw_text` text not null
@@ -30,6 +33,7 @@ Constraints:
 - `updated_at` timestamptz not null default now()
 
 ### `recipe_steps`
+
 - `id` uuid primary key default gen_random_uuid()
 - `recipe_id` uuid not null references recipes(id) on delete cascade
 - `step_text` text not null
@@ -38,6 +42,7 @@ Constraints:
 - `updated_at` timestamptz not null default now()
 
 ### `recipe_imports`
+
 - `id` uuid primary key default gen_random_uuid()
 - `user_id` uuid not null references auth.users(id) on delete cascade
 - `source_url` text not null
@@ -51,9 +56,11 @@ Constraints:
 - `updated_at` timestamptz not null default now()
 
 Constraints:
+
 - unique (`user_id`, `source_url`)
 
-### `recipe_revisions` 
+### `recipe_revisions`
+
 - `id` uuid primary key default gen_random_uuid()
 - `recipe_id` uuid not null references recipes(id) on delete cascade
 - `user_id` uuid not null references auth.users(id) on delete cascade
@@ -61,6 +68,7 @@ Constraints:
 - `created_at` timestamptz not null default now()
 
 ### `auth_event_logs` ( 30-day retention)
+
 - `id` uuid primary key default gen_random_uuid()
 - `user_id` uuid null references auth.users(id) on delete set null
 - `event_type` text not null
@@ -68,6 +76,7 @@ Constraints:
 - `created_at` timestamptz not null default now()
 
 Enums:
+
 - `recipe_status` enum ('processing', 'succeeded', 'failed')
 
 2. Relationships between tables
@@ -100,6 +109,7 @@ Enums:
 Enable RLS on: `recipes`, `recipe_ingredients`, `recipe_steps`, `recipe_imports`, `recipe_revisions`.
 
 Policies:
+
 - `recipes`:
   - select/insert/update/delete: `user_id = auth.uid()`
 - `recipe_ingredients`:
@@ -112,6 +122,7 @@ Policies:
   - select/insert/update/delete: `exists (select 1 from recipes r where r.id = recipe_id and r.user_id = auth.uid())`
 
 Service role access:
+
 - Full access to all tables for backend workers and observability.
 
 5. Additional notes or explanations about design decisions

@@ -83,6 +83,7 @@ The MVP UI centers on a single recipes list home view with a dedicated detail ro
 ## 3. User Journey Map
 
 Primary journey (import and view):
+
 1. User lands on the Recipes List and sees existing recipes or an empty state.
 2. User opens “Add Recipe” modal and selects “Import URL.”
 3. User enters a URL; client-side validation runs.
@@ -92,6 +93,7 @@ Primary journey (import and view):
 7. Recipe Detail shows full ingredients, steps, cook time, and import metadata.
 
 Secondary journey (manual entry and edit):
+
 1. User opens “Add Recipe” modal and selects “Manual Entry.”
 2. User enters title, ingredients, steps, optional cook time; multi-line input splits on newlines.
 3. On submit, recipe appears in the list; status set to succeeded.
@@ -100,6 +102,7 @@ Secondary journey (manual entry and edit):
 6. On save, the list and detail update optimistically.
 
 Deletion journey:
+
 1. User triggers delete from list or detail.
 2. For non-failed items, confirmation dialog appears; user confirms.
 3. For failed imports, delete executes immediately without dialog.
@@ -124,4 +127,3 @@ Deletion journey:
 - StatusIndicator: processing/succeeded/failed with retry context.
 - ErrorBanner: dismissible network errors that reappear on failure.
 - ConfirmationDialog: reusable delete confirmation dialog.
-

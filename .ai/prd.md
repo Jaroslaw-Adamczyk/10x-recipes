@@ -1,11 +1,15 @@
 # Product Requirements Document (PRD) - APP Store Recipes
+
 ## 1. Product Overview
+
 APP Store Recipes centralizes text-based cooking recipes sourced from arbitrary URLs, normalizes ingredients and preparation data, and stores structured records per user. The MVP focuses on a local-first experience where authenticated users can import a validated recipe, search saved recipes by ingredients, view structured details (ingredients, steps, cook time), and delete records. Imports are powered by an asynchronous LLM-extraction worker that retries failed attempts and surfaces processing states, while all metadata and errors are logged for future analysis.
 
 ## 2. User Problem
+
 Users currently gather recipes from disparate websites where URLs disappear or change formatting, making it difficult to search and consistently reuse favorite ingredients or cooking steps. Storing only destinations causes information loss when sites expire, and inconsistent ingredient/steps formatting hampers searchability. Without a centralized place that ingests ingredients and steps separately, users cannot quickly find recipes by the ingredients they have on hand, nor rely on stable, searchable storage of their own recipes.
 
 ## 3. Functional Requirements
+
 1. Recipe Capture
    - The system must allow importing a single recipe from any URL using an LLM-powered extractor that returns title, ingredients, preparation steps, and optional cook time.
    - Imports must validate that at least one ingredient and one step are present; failures surface a one-sentence error explaining the issue. Multiples recipes detected also trigger a failure.
@@ -42,7 +46,9 @@ Users currently gather recipes from disparate websites where URLs disappear or c
    - Track worker retries and failure reasons, and expose status in the recipe list to keep users informed.
 
 ## 4. Product Boundaries
+
 In Scope:
+
 - Text-only recipes (no multimedia assets such as photos or videos).
 - Recipe imports from any URL that yields a single recipe document; the LLM extractor must validate structure before saving.
 - Local-first architecture without mandatory network syncing for MVP.
@@ -50,6 +56,7 @@ In Scope:
 - Manual recipe deletion with a confirmation dialog emphasizing irreversibility.
 
 Out of Scope:
+
 - Recipe sharing, ratings, comments, or any social interactions between users.
 - Multimedia support (images, audio, video) or rich formatting beyond plain text fields.
 - Advanced search features like synonym expansion, fuzzy matching, or ingredient grouping.
@@ -141,6 +148,7 @@ Out of Scope:
   - The recipe list reflects the updated fields without requiring a full page refresh.
 
 ## 6. Success Metrics
+
 1. Weekly adoption: 75% of authenticated users import at least one recipe per week within the MVP timeframe.
 2. Import reliability: 95% of imports that pass validation succeed within three automatic retries.
 3. Search effectiveness: 90% of ingredient searches return at least one matching recipe when a recipe contains the queried term.

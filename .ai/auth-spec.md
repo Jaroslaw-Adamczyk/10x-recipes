@@ -5,6 +5,7 @@
 This specification defines the complete authentication architecture for the 10x-recipes application, implementing user registration (US-002) and login (US-001) functionality. The design integrates Supabase Auth with Astro's server-side rendering model while preserving all existing recipe management features.
 
 **Key Design Principles:**
+
 - Supabase Auth handles credential verification, session management, and security
 - **CRITICAL:** Application NEVER stores passwords or credentials - Supabase Auth manages all credential hashing and verification
 - Server-side authentication checks protect all recipe routes and API endpoints
@@ -27,17 +28,20 @@ This specification defines the complete authentication architecture for the 10x-
 #### **CONFLICT 1: Credential Storage Language**
 
 **PRD Statement (line 38):**
+
 > "Store credentials securely and log authentication events for analytics."
 
 **Issue:** This language implies storing passwords/credentials in the application database, which is a critical security anti-pattern.
 
 **Resolution:** ✅ RESOLVED
+
 - **Clarification:** PRD language is imprecise. Intent is to "manage authentication securely."
 - **Implementation:** Supabase Auth stores bcrypt-hashed passwords in its internal `auth.users` table
 - **Application:** NEVER stores, logs, or handles raw passwords
 - **Auth Spec Updated:** Section 7 (Key Design Principles) explicitly states application never stores credentials
 
 **Updated PRD Understanding:**
+
 > "Implement Supabase Auth for secure credential management (passwords never stored in application database) and log authentication events to `auth_event_logs` for analytics."
 
 ---
@@ -45,11 +49,13 @@ This specification defines the complete authentication architecture for the 10x-
 #### **CONFLICT 2: RLS Policy Implementation Status**
 
 **Auth Spec Statement (line 1068):**
+
 > "Enable RLS policies that were commented out in initial migration"
 
 **Issue:** Spec referenced future migration but didn't confirm existence of base schema.
 
 **Resolution:** ✅ VERIFIED & DOCUMENTED
+
 - **Verification:** Initial migration `20260122120000_create_recipe_schema.sql` confirmed to include:
   - All tables with proper `user_id` foreign keys
   - `auth_event_logs` table present (lines 70-76)
@@ -63,11 +69,13 @@ This specification defines the complete authentication architecture for the 10x-
 #### **CONFLICT 3: Supabase Client Architecture for Astro SSR**
 
 **Original Auth Spec:**
+
 > Used singleton Supabase client pattern
 
 **Issue:** Singleton clients don't work properly with Astro's per-request SSR model. Sessions can leak between requests.
 
 **Resolution:** ✅ CORRECTED
+
 - **Root Cause:** Astro processes requests in isolation; shared client state causes session confusion
 - **Solution:** Implement factory pattern with per-request client creation
 - **Updated Sections:**
@@ -86,6 +94,7 @@ This specification defines the complete authentication architecture for the 10x-
 **Auth Spec Status:** Originally marked as "optional" without concrete guidance
 
 **Resolution:** ✅ CLARIFIED
+
 - **Section 3.2.3 Updated:** Now provides clear decision framework
 - **MVP Recommendation:** Use Supabase built-in Auth rate limiting (verify in dashboard)
 - **Fallback Plan:** Application-level in-memory rate limiter for MVP if Supabase insufficient
@@ -98,6 +107,7 @@ This specification defines the complete authentication architecture for the 10x-
 **Issue:** Auth event logging requires service-role client (bypasses RLS), but creation pattern not specified.
 
 **Resolution:** ✅ SPECIFIED
+
 - **Section 3.1.1:** Added `src/db/supabase.server.ts` file specification
 - **Section 2.3.2:** Updated to use service-role client from server module
 - **Security Note:** Service-role client never exposed to frontend, only used for auth logging
@@ -109,6 +119,7 @@ This specification defines the complete authentication architecture for the 10x-
 **Finding:** Both PRD and Auth Spec document same validation rules and user flows.
 
 **Assessment:** ✅ ACCEPTABLE REDUNDANCY
+
 - **Rationale:** PRD defines "what" (requirements), Auth Spec defines "how" (implementation)
 - **Benefit:** Allows verification that implementation satisfies requirements
 - **No Action Required:** Redundancy is by design and aids implementation validation
@@ -119,18 +130,18 @@ This specification defines the complete authentication architecture for the 10x-
 
 Each user story from PRD Section 5 mapped to implementation sections:
 
-| User Story | PRD Line | Auth Spec Implementation | Status |
-|------------|----------|--------------------------|--------|
-| US-001 (Login) | 61-67 | Sections 1.2.1, 2.1.2, 4.1-4.5 | ✅ Implementable |
-| US-002 (Register) | 69-75 | Sections 1.2.2, 2.1.1, 4.1-4.5 | ✅ Implementable |
-| US-003 (Import) | 77-84 | Section 2.2 (auth checks added) | ✅ Implementable |
-| US-004 (View) | 86-93 | Sections 1.3.1, 2.2 | ✅ Implementable |
-| US-005 (Search) | 95-101 | Section 2.2 (auth checks added) | ✅ Implementable |
-| US-006 (Delete) | 103-109 | Section 2.2 (auth checks added) | ✅ Implementable |
-| US-007 (Status) | 111-117 | Section 2.2 (preserved) | ✅ Implementable |
-| US-008 (Retry) | 119-125 | Section 2.2 (preserved) | ✅ Implementable |
-| US-009 (Manual Create) | 127-133 | Section 2.2 (auth checks added) | ✅ Implementable |
-| US-010 (Edit) | 135-141 | Section 2.2 (auth checks added) | ✅ Implementable |
+| User Story             | PRD Line | Auth Spec Implementation        | Status           |
+| ---------------------- | -------- | ------------------------------- | ---------------- |
+| US-001 (Login)         | 61-67    | Sections 1.2.1, 2.1.2, 4.1-4.5  | ✅ Implementable |
+| US-002 (Register)      | 69-75    | Sections 1.2.2, 2.1.1, 4.1-4.5  | ✅ Implementable |
+| US-003 (Import)        | 77-84    | Section 2.2 (auth checks added) | ✅ Implementable |
+| US-004 (View)          | 86-93    | Sections 1.3.1, 2.2             | ✅ Implementable |
+| US-005 (Search)        | 95-101   | Section 2.2 (auth checks added) | ✅ Implementable |
+| US-006 (Delete)        | 103-109  | Section 2.2 (auth checks added) | ✅ Implementable |
+| US-007 (Status)        | 111-117  | Section 2.2 (preserved)         | ✅ Implementable |
+| US-008 (Retry)         | 119-125  | Section 2.2 (preserved)         | ✅ Implementable |
+| US-009 (Manual Create) | 127-133  | Section 2.2 (auth checks added) | ✅ Implementable |
+| US-010 (Edit)          | 135-141  | Section 2.2 (auth checks added) | ✅ Implementable |
 
 **Conclusion:** All user stories have complete implementation paths defined in auth-spec.
 
@@ -138,11 +149,11 @@ Each user story from PRD Section 5 mapped to implementation sections:
 
 ### 0.6 Outstanding Decisions Required
 
-| Decision Point | Section | Options | Recommendation |
-|----------------|---------|---------|----------------|
-| Rate Limiting Source | 3.2.3 | Supabase built-in vs. custom | Check Supabase first |
-| Session Duration | 2.4.2 | 7 days vs. other | Keep 7 days (PRD silent) |
-| Password Min Length | 2.3.1 | 8 chars vs. more | Keep 8 chars (PRD compliant) |
+| Decision Point       | Section | Options                      | Recommendation               |
+| -------------------- | ------- | ---------------------------- | ---------------------------- |
+| Rate Limiting Source | 3.2.3   | Supabase built-in vs. custom | Check Supabase first         |
+| Session Duration     | 2.4.2   | 7 days vs. other             | Keep 7 days (PRD silent)     |
+| Password Min Length  | 2.3.1   | 8 chars vs. more             | Keep 8 chars (PRD compliant) |
 
 **Action Required:** Verify Supabase Auth rate limiting configuration before starting implementation.
 
@@ -155,14 +166,17 @@ Each user story from PRD Section 5 mapped to implementation sections:
 The authentication system introduces new dedicated pages while modifying existing pages to enforce authentication requirements:
 
 **New Pages:**
+
 - `/auth/login` - Login form page
 - `/auth/register` - Registration form page
 
 **Modified Pages:**
+
 - `/` (index) - Recipe list, now requires authentication
 - `/recipes/[id]` - Recipe detail, now requires authentication
 
 **Unchanged Pages:**
+
 - All API endpoints remain but add authentication checks
 
 ### 1.2 Authentication Pages
@@ -172,6 +186,7 @@ The authentication system introduces new dedicated pages while modifying existin
 **Purpose:** Provides email/password login interface for existing users.
 
 **Page Structure:**
+
 ```
 Layout (Astro)
 └── LoginView (React Client Component)
@@ -184,6 +199,7 @@ Layout (Astro)
 ```
 
 **Server-Side Logic (Astro frontmatter):**
+
 - Check if user is already authenticated via session cookie
 - If authenticated, redirect to `/` (recipe list)
 - If not authenticated, render login form
@@ -192,6 +208,7 @@ Layout (Astro)
   - `?error={message}` - Display error from redirect (e.g., session expired)
 
 **Client Component Responsibilities:**
+
 - Render form fields with proper HTML5 validation attributes
 - Handle form submission via fetch to `/api/auth/login` endpoint
 - Display validation errors inline near relevant fields
@@ -200,6 +217,7 @@ Layout (Astro)
 - Redirect to target page on successful authentication
 
 **Validation Cases:**
+
 1. **Empty email:** "Email is required"
 2. **Invalid email format:** "Please enter a valid email address"
 3. **Empty password:** "Password is required"
@@ -207,6 +225,7 @@ Layout (Astro)
 5. **Network/server errors:** "Unable to connect. Please try again."
 
 **User Flow:**
+
 1. User lands on `/auth/login`
 2. Server checks session → if authenticated, redirect to `/`
 3. User fills email and password fields
@@ -222,6 +241,7 @@ Layout (Astro)
 **Purpose:** Allows new users to create accounts with email/password.
 
 **Page Structure:**
+
 ```
 Layout (Astro)
 └── RegisterView (React Client Component)
@@ -235,6 +255,7 @@ Layout (Astro)
 ```
 
 **Server-Side Logic (Astro frontmatter):**
+
 - Check if user is already authenticated
 - If authenticated, redirect to `/` (recipe list)
 - If not authenticated, render registration form
@@ -242,6 +263,7 @@ Layout (Astro)
   - `?redirectTo={path}` - Return path after successful registration
 
 **Client Component Responsibilities:**
+
 - Render form fields with validation attributes
 - Validate password strength client-side (minimum 8 characters)
 - Check password confirmation matches
@@ -252,6 +274,7 @@ Layout (Astro)
 - Automatically log in user and redirect on successful registration
 
 **Validation Cases:**
+
 1. **Empty email:** "Email is required"
 2. **Invalid email format:** "Please enter a valid email address"
 3. **Empty password:** "Password is required"
@@ -261,6 +284,7 @@ Layout (Astro)
 7. **Network/server errors:** "Unable to create account. Please try again."
 
 **User Flow:**
+
 1. User lands on `/auth/register`
 2. Server checks session → if authenticated, redirect to `/`
 3. User fills email, password, and confirm password fields
@@ -279,6 +303,7 @@ Layout (Astro)
 **Modifications Required:**
 
 **Server-Side Logic (Astro frontmatter):**
+
 ```typescript
 // Before existing code:
 const session = await Astro.locals.supabase.auth.getSession();
@@ -291,11 +316,13 @@ const userId = session.data.session.user.id;
 ```
 
 **Client Component Updates:**
+
 - `RecipeListView` receives `userId` as prop (for display purposes only)
 - Add logout button in page header/navigation
 - No other functional changes to existing recipe list behavior
 
 **Authentication Flow:**
+
 1. User navigates to `/`
 2. Server checks for valid session
 3. If no session: Redirect to `/auth/login?redirectTo=/`
@@ -309,6 +336,7 @@ const userId = session.data.session.user.id;
 **Modifications Required:**
 
 **Server-Side Logic (Astro frontmatter):**
+
 ```typescript
 // Before existing code:
 const session = await Astro.locals.supabase.auth.getSession();
@@ -321,11 +349,13 @@ const userId = session.data.session.user.id;
 ```
 
 **Client Component Updates:**
+
 - `RecipeDetailView` continues to work as before
 - Add logout button in page header/navigation
 - No other functional changes
 
 **Authentication Flow:**
+
 1. User navigates to `/recipes/[id]`
 2. Server checks for valid session
 3. If no session: Redirect to `/auth/login?redirectTo=/recipes/[id]`
@@ -344,6 +374,7 @@ const userId = session.data.session.user.id;
 **Purpose:** Provides consistent navigation and authentication state across pages.
 
 **Structure:**
+
 ```
 AppHeader (React Client Component)
 ├── Logo/Home Link
@@ -354,12 +385,14 @@ AppHeader (React Client Component)
 ```
 
 **Client-Side Behavior:**
+
 - Display user email from session context
 - Logout button calls `/api/auth/logout` endpoint
 - On successful logout, redirect to `/auth/login`
 - Manage loading state during logout
 
 **Integration Points:**
+
 - Add to `Layout.astro` as client component
 - Receives authentication state as prop from server
 - Conditionally rendered based on route (hide on auth pages)
@@ -373,6 +406,7 @@ AppHeader (React Client Component)
 **Purpose:** Reusable form input with consistent validation display.
 
 **Props:**
+
 - `label: string` - Field label text
 - `name: string` - Input name attribute
 - `type: string` - Input type (text, email, password)
@@ -383,6 +417,7 @@ AppHeader (React Client Component)
 - `autoComplete?: string` - Autocomplete hint
 
 **Rendering:**
+
 - Label with required indicator
 - Input field with validation styling
 - Error message display (only when error exists)
@@ -392,6 +427,7 @@ AppHeader (React Client Component)
 **Purpose:** Form submit button with loading state.
 
 **Props:**
+
 - `label: string` - Button text
 - `loadingLabel?: string` - Text shown during loading
 - `isLoading: boolean` - Loading state flag
@@ -404,12 +440,14 @@ AppHeader (React Client Component)
 **File:** `src/layouts/Layout.astro`
 
 **Changes:**
+
 - Accept optional `showHeader?: boolean` prop (default: true)
 - When `showHeader` is true and user is authenticated, include `AppHeader` component
 - Pass authentication state to header component
 - Maintain all existing layout functionality
 
 **Server-Side Logic:**
+
 ```typescript
 const session = await Astro.locals.supabase.auth.getSession();
 const isAuthenticated = !!session.data.session;
@@ -421,6 +459,7 @@ const userEmail = session.data.session?.user.email;
 ### 1.6 Validation and Error Handling Summary
 
 **Client-Side Validation (Immediate Feedback):**
+
 - Email format validation (HTML5 + regex)
 - Password minimum length (8 characters)
 - Password confirmation match
@@ -428,6 +467,7 @@ const userEmail = session.data.session?.user.email;
 - Display inline near fields, clear on fix
 
 **Server-Side Validation (Security & Data Integrity):**
+
 - Email format re-validation
 - Password strength enforcement
 - Duplicate email check
@@ -435,12 +475,14 @@ const userEmail = session.data.session?.user.email;
 - SQL injection protection (via parameterized queries)
 
 **Error Display Patterns:**
+
 1. **Field Errors:** Shown inline below input, red border on input
 2. **Form Errors:** Shown at top of form in error banner (e.g., "Invalid credentials")
 3. **Network Errors:** Generic message with retry option
 4. **Session Errors:** Redirect to login with error in query param
 
 **Error Messages (User-Facing):**
+
 - Clear, non-technical language
 - Action-oriented (what to do next)
 - No exposure of system internals
@@ -459,16 +501,18 @@ const userEmail = session.data.session?.user.email;
 **File:** `src/pages/api/auth/register.ts`
 
 **Request Body Schema:**
+
 ```typescript
 {
-  email: string;      // Valid email format
-  password: string;   // Minimum 8 characters
+  email: string; // Valid email format
+  password: string; // Minimum 8 characters
 }
 ```
 
 **Response Schemas:**
 
 **Success (201 Created):**
+
 ```typescript
 {
   success: true;
@@ -476,16 +520,17 @@ const userEmail = session.data.session?.user.email;
     id: string;
     email: string;
     created_at: string;
-  };
+  }
   session: {
     access_token: string;
     refresh_token: string;
     expires_in: number;
-  };
+  }
 }
 ```
 
 **Error (400 Bad Request):**
+
 ```typescript
 {
   success: false;
@@ -500,17 +545,19 @@ const userEmail = session.data.session?.user.email;
 ```
 
 **Error (500 Internal Server Error):**
+
 ```typescript
 {
   success: false;
   error: {
     code: "SERVER_ERROR";
     message: "An unexpected error occurred";
-  };
+  }
 }
 ```
 
 **Implementation Steps:**
+
 1. Parse and validate request body (Zod schema)
 2. Normalize email (trim, lowercase)
 3. Validate password strength (min 8 chars)
@@ -526,6 +573,7 @@ const userEmail = session.data.session?.user.email;
 7. Catch unexpected errors, log, return generic 500
 
 **Error Handling Cases:**
+
 - Invalid email format: 400, "Please enter a valid email address"
 - Password too short: 400, "Password must be at least 8 characters"
 - Email already registered: 400, "An account with this email already exists"
@@ -541,6 +589,7 @@ const userEmail = session.data.session?.user.email;
 **File:** `src/pages/api/auth/login.ts`
 
 **Request Body Schema:**
+
 ```typescript
 {
   email: string;
@@ -551,33 +600,36 @@ const userEmail = session.data.session?.user.email;
 **Response Schemas:**
 
 **Success (200 OK):**
+
 ```typescript
 {
   success: true;
   user: {
     id: string;
     email: string;
-  };
+  }
   session: {
     access_token: string;
     refresh_token: string;
     expires_in: number;
-  };
+  }
 }
 ```
 
 **Error (401 Unauthorized):**
+
 ```typescript
 {
   success: false;
   error: {
     code: "INVALID_CREDENTIALS";
     message: "Invalid email or password";
-  };
+  }
 }
 ```
 
 **Error (400 Bad Request):**
+
 ```typescript
 {
   success: false;
@@ -592,6 +644,7 @@ const userEmail = session.data.session?.user.email;
 ```
 
 **Implementation Steps:**
+
 1. Parse and validate request body (Zod schema)
 2. Normalize email (trim, lowercase)
 3. Call `supabase.auth.signInWithPassword()` with credentials
@@ -607,12 +660,14 @@ const userEmail = session.data.session?.user.email;
 6. Catch unexpected errors, log, return generic 500
 
 **Error Handling Cases:**
+
 - Empty email/password: 400, specific field errors
 - Invalid credentials: 401, "Invalid email or password" (generic for security)
 - Too many attempts: 429, "Too many login attempts, please try again later"
 - Service unavailable: 500, "Service temporarily unavailable"
 
 **Security Considerations:**
+
 - Generic error message for invalid credentials (don't reveal if email exists)
 - Rate limiting on email and IP to prevent brute force
 - Log all login attempts (success and failure) for monitoring
@@ -631,6 +686,7 @@ const userEmail = session.data.session?.user.email;
 **Response Schemas:**
 
 **Success (200 OK):**
+
 ```typescript
 {
   success: true;
@@ -638,17 +694,19 @@ const userEmail = session.data.session?.user.email;
 ```
 
 **Error (500 Internal Server Error):**
+
 ```typescript
 {
   success: false;
   error: {
     code: "SERVER_ERROR";
     message: "Logout failed";
-  };
+  }
 }
 ```
 
 **Implementation Steps:**
+
 1. Extract session from cookies via `Astro.locals.supabase`
 2. Call `supabase.auth.signOut()`
 3. Clear session cookies
@@ -657,6 +715,7 @@ const userEmail = session.data.session?.user.email;
 6. Catch unexpected errors, log, return 500 (but still clear cookies)
 
 **Error Handling:**
+
 - No session exists: Still return 200 success (idempotent)
 - Supabase error: Log error, clear cookies anyway, return 200
 - Always succeed from client perspective to avoid UX issues
@@ -674,17 +733,19 @@ const userEmail = session.data.session?.user.email;
 **Response Schemas:**
 
 **Success (200 OK) - Authenticated:**
+
 ```typescript
 {
   authenticated: true;
   user: {
     id: string;
     email: string;
-  };
+  }
 }
 ```
 
 **Success (200 OK) - Not Authenticated:**
+
 ```typescript
 {
   authenticated: false;
@@ -692,6 +753,7 @@ const userEmail = session.data.session?.user.email;
 ```
 
 **Implementation Steps:**
+
 1. Extract session from cookies via `Astro.locals.supabase`
 2. Call `supabase.auth.getSession()`
 3. If session exists and valid, return user data
@@ -699,6 +761,7 @@ const userEmail = session.data.session?.user.email;
 5. Optionally refresh session if refresh token is valid
 
 **Use Cases:**
+
 - Client-side components checking auth state
 - Polling for session expiration
 - Refreshing session before expiration
@@ -712,11 +775,13 @@ All existing recipe API endpoints require authentication checks:
 #### 2.2.1 Recipe Endpoints
 
 **Files to Modify:**
+
 - `src/pages/api/recipes/index.ts` (GET, POST)
 - `src/pages/api/recipes/[id].ts` (GET, PUT, DELETE)
 - `src/pages/api/recipes/import.ts` (POST)
 
 **Authentication Check Pattern (apply to all):**
+
 ```typescript
 // At the start of each API handler:
 const session = await Astro.locals.supabase.auth.getSession();
@@ -741,6 +806,7 @@ const userId = session.data.session.user.id;
 **Changes to Service Functions:**
 
 **Pattern:** All recipe service functions receive `userId` parameter:
+
 - `listRecipes(supabase, userId, query)`
 - `getRecipeDetail(supabase, userId, recipeId)`
 - `createRecipe(supabase, userId, command)`
@@ -749,6 +815,7 @@ const userId = session.data.session.user.id;
 - `createRecipeImport(supabase, userId, command)`
 
 **RLS Policy Enforcement:**
+
 - Supabase RLS policies automatically filter by `user_id = auth.uid()`
 - No additional filtering needed in queries
 - Attempts to access other users' data return empty results or errors
@@ -762,42 +829,40 @@ const userId = session.data.session.user.id;
 **File:** `src/lib/validation/auth.ts` (new)
 
 **Registration Schema:**
+
 ```typescript
 export const registerSchema = z.object({
-  email: z.string()
-    .trim()
-    .toLowerCase()
-    .email("Please enter a valid email address"),
-  password: z.string()
-    .min(8, "Password must be at least 8 characters"),
+  email: z.string().trim().toLowerCase().email("Please enter a valid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
 });
 ```
 
 **Login Schema:**
+
 ```typescript
 export const loginSchema = z.object({
-  email: z.string()
-    .trim()
-    .toLowerCase()
-    .email("Please enter a valid email address"),
-  password: z.string()
-    .min(1, "Password is required"),
+  email: z.string().trim().toLowerCase().email("Please enter a valid email address"),
+  password: z.string().min(1, "Password is required"),
 });
 ```
 
 **Usage in API Endpoints:**
+
 ```typescript
 const parseResult = registerSchema.safeParse(body);
 if (!parseResult.success) {
   const fieldErrors = parseResult.error.flatten().fieldErrors;
-  return new Response(JSON.stringify({
-    success: false,
-    error: {
-      code: "VALIDATION_ERROR",
-      message: "Invalid input",
-      fields: fieldErrors,
-    },
-  }), { status: 400 });
+  return new Response(
+    JSON.stringify({
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "Invalid input",
+        fields: fieldErrors,
+      },
+    }),
+    { status: 400 }
+  );
 }
 ```
 
@@ -810,6 +875,7 @@ if (!parseResult.success) {
 **Table:** `auth_event_logs` ✅ VERIFIED - Exists in migration `20260122120000_create_recipe_schema.sql` lines 70-76
 
 **Schema:**
+
 ```sql
 create table public.auth_event_logs (
   id uuid primary key default gen_random_uuid(),
@@ -821,6 +887,7 @@ create table public.auth_event_logs (
 ```
 
 **Event Types:**
+
 - `user_registered` - New account created
 - `user_logged_in` - Successful login
 - `user_logged_out` - Logout action
@@ -830,15 +897,17 @@ create table public.auth_event_logs (
 **Service Function:** `src/lib/services/auth/logAuthEvent.ts` (new)
 
 **Function Signature:**
+
 ```typescript
 export async function logAuthEvent(
   eventType: string,
   userId: string | null,
   metadata: Record<string, unknown>
-): Promise<void>
+): Promise<void>;
 ```
 
 **Metadata Examples:**
+
 ```typescript
 // Registration
 {
@@ -856,6 +925,7 @@ export async function logAuthEvent(
 ```
 
 **Implementation:**
+
 - Use service-role client (from `src/db/supabase.server.ts`) to write to `auth_event_logs`
 - Never expose this data to clients
 - Fire-and-forget pattern (don't block auth flow on logging failure)
@@ -871,10 +941,12 @@ export async function logAuthEvent(
 **Strategy:** Use Supabase's built-in session cookie handling with httpOnly cookies.
 
 **Cookie Names:**
+
 - `sb-access-token` - Access token (short-lived)
 - `sb-refresh-token` - Refresh token (long-lived)
 
 **Cookie Attributes:**
+
 - `httpOnly: true` - Prevent JavaScript access (XSS protection)
 - `secure: true` - HTTPS only in production
 - `sameSite: 'lax'` - CSRF protection
@@ -882,6 +954,7 @@ export async function logAuthEvent(
 - `maxAge: 604800` - 7 days for refresh token
 
 **Implementation:**
+
 - Supabase client automatically manages cookies via `@supabase/ssr` helpers
 - No manual cookie manipulation required
 - Cookies set on successful registration/login
@@ -894,16 +967,21 @@ export async function logAuthEvent(
 **Strategy:** Automatic refresh via Supabase client when access token expires.
 
 **Behavior:**
+
 - Access tokens expire after 1 hour
 - Supabase client automatically refreshes using refresh token
 - Refresh token valid for 7 days
 - After 7 days of inactivity, user must re-login
 
 **Implementation:**
+
 - Supabase client handles refresh automatically on API calls
 - Middleware can check session and refresh if needed:
   ```typescript
-  const { data: { session }, error } = await supabase.auth.getSession();
+  const {
+    data: { session },
+    error,
+  } = await supabase.auth.getSession();
   ```
 - If refresh token expired, redirect to login
 
@@ -914,14 +992,17 @@ export async function logAuthEvent(
 **File:** `src/middleware/index.ts` (modify existing)
 
 **Current Behavior:**
+
 - Injects Supabase client into `context.locals`
 
 **New Behavior:**
+
 - Create per-request Supabase client using `createSupabaseClient()` factory
 - Extract session from cookies and inject into client
 - Set `context.locals.supabase`, `context.locals.session`, and `context.locals.user` for easy access
 
 **Implementation Pattern:**
+
 ```typescript
 import { defineMiddleware } from "astro:middleware";
 import { createSupabaseClient } from "../db/supabase.client";
@@ -929,42 +1010,45 @@ import type { Session, User } from "@supabase/supabase-js";
 
 export const onRequest = defineMiddleware(async (context, next) => {
   // Extract tokens from cookies
-  const accessToken = context.cookies.get('sb-access-token')?.value;
-  const refreshToken = context.cookies.get('sb-refresh-token')?.value;
-  
+  const accessToken = context.cookies.get("sb-access-token")?.value;
+  const refreshToken = context.cookies.get("sb-refresh-token")?.value;
+
   // Create per-request Supabase client
   const supabase = createSupabaseClient(accessToken, refreshToken);
   context.locals.supabase = supabase;
-  
+
   // Get session for all requests (optional, for convenience)
-  const { data: { session } } = await supabase.auth.getSession();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
   context.locals.session = session;
   context.locals.user = session?.user ?? null;
-  
+
   // Update cookies if session was refreshed
   if (session) {
-    context.cookies.set('sb-access-token', session.access_token, {
+    context.cookies.set("sb-access-token", session.access_token, {
       httpOnly: true,
       secure: import.meta.env.PROD,
-      sameSite: 'lax',
-      path: '/',
+      sameSite: "lax",
+      path: "/",
       maxAge: 60 * 60, // 1 hour
     });
-    context.cookies.set('sb-refresh-token', session.refresh_token, {
+    context.cookies.set("sb-refresh-token", session.refresh_token, {
       httpOnly: true,
       secure: import.meta.env.PROD,
-      sameSite: 'lax',
-      path: '/',
+      sameSite: "lax",
+      path: "/",
       maxAge: 60 * 60 * 24 * 7, // 7 days
     });
   }
-  
+
   // Continue to next handler
   return next();
 });
 ```
 
 **Update Type Definitions:**
+
 ```typescript
 // In src/env.d.ts
 import type { SupabaseClient } from "./db/supabase.client";
@@ -988,24 +1072,29 @@ declare global {
 #### 2.5.1 Error Categories
 
 **Validation Errors (400):**
+
 - Missing required fields
 - Invalid format (email, password length)
 - Schema validation failures
 
 **Authentication Errors (401):**
+
 - Invalid credentials
 - Missing session/token
 - Expired session (if not auto-refreshed)
 
 **Authorization Errors (403):**
+
 - Attempting to access other user's resources
 - (RLS policies handle this automatically)
 
 **Rate Limiting Errors (429):**
+
 - Too many login attempts
 - Too many registration attempts
 
 **Server Errors (500):**
+
 - Supabase service unavailable
 - Database connection errors
 - Unexpected exceptions
@@ -1013,6 +1102,7 @@ declare global {
 #### 2.5.2 Error Response Format
 
 **Consistent Structure:**
+
 ```typescript
 {
   success: false;
@@ -1028,6 +1118,7 @@ declare global {
 ```
 
 **Error Codes:**
+
 - `VALIDATION_ERROR` - Input validation failed
 - `INVALID_CREDENTIALS` - Login failed
 - `DUPLICATE_EMAIL` - Email already registered
@@ -1046,6 +1137,7 @@ declare global {
 **File:** `src/db/supabase.client.ts` (modify existing)
 
 **Current Configuration:**
+
 - Creates client with anon key
 - No session management
 
@@ -1063,23 +1155,21 @@ export function createSupabaseClient(accessToken?: string, refreshToken?: string
   const supabaseUrl = import.meta.env.SUPABASE_URL;
   const supabaseAnonKey = import.meta.env.SUPABASE_KEY;
 
-  return createClient<Database>(
-    supabaseUrl,
-    supabaseAnonKey,
-    {
-      auth: {
-        autoRefreshToken: true,      // Auto-refresh before expiry
-        persistSession: false,        // SSR handles cookies externally
-        detectSessionInUrl: true,     // Support magic links (future)
-        flowType: 'pkce',            // Use PKCE flow for security
-      },
-      global: {
-        headers: accessToken ? {
-          Authorization: `Bearer ${accessToken}`,
-        } : {},
-      },
-    }
-  );
+  return createClient<Database>(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      autoRefreshToken: true, // Auto-refresh before expiry
+      persistSession: false, // SSR handles cookies externally
+      detectSessionInUrl: true, // Support magic links (future)
+      flowType: "pkce", // Use PKCE flow for security
+    },
+    global: {
+      headers: accessToken
+        ? {
+            Authorization: `Bearer ${accessToken}`,
+          }
+        : {},
+    },
+  });
 }
 
 export type SupabaseClient = ReturnType<typeof createSupabaseClient>;
@@ -1097,19 +1187,16 @@ const supabaseUrl = import.meta.env.SUPABASE_URL;
 const supabaseServiceKey = import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
 
 // Service role client bypasses RLS - use with caution
-export const supabaseServerClient = createClient<Database>(
-  supabaseUrl,
-  supabaseServiceKey,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  }
-);
+export const supabaseServerClient = createClient<Database>(supabaseUrl, supabaseServiceKey, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false,
+  },
+});
 ```
 
 **Usage:**
+
 - Use `supabaseClient` for user-facing operations (respects RLS)
 - Use `supabaseServerClient` only for admin tasks (auth event logging)
 
@@ -1118,17 +1205,19 @@ export const supabaseServerClient = createClient<Database>(
 #### 3.1.2 Authentication Methods
 
 **Registration Flow:**
+
 ```typescript
 const { data, error } = await supabase.auth.signUp({
   email: email,
   password: password,
   options: {
-    emailRedirectTo: undefined,  // No email verification in MVP
+    emailRedirectTo: undefined, // No email verification in MVP
   },
 });
 ```
 
 **Login Flow:**
+
 ```typescript
 const { data, error } = await supabase.auth.signInWithPassword({
   email: email,
@@ -1137,18 +1226,27 @@ const { data, error } = await supabase.auth.signInWithPassword({
 ```
 
 **Logout Flow:**
+
 ```typescript
 const { error } = await supabase.auth.signOut();
 ```
 
 **Session Check:**
+
 ```typescript
-const { data: { session }, error } = await supabase.auth.getSession();
+const {
+  data: { session },
+  error,
+} = await supabase.auth.getSession();
 ```
 
 **User Retrieval:**
+
 ```typescript
-const { data: { user }, error } = await supabase.auth.getUser();
+const {
+  data: { user },
+  error,
+} = await supabase.auth.getUser();
 ```
 
 ---
@@ -1158,12 +1256,14 @@ const { data: { user }, error } = await supabase.auth.getUser();
 #### 3.2.1 Password Security
 
 **Requirements:**
+
 - Minimum 8 characters (enforced client and server)
 - No maximum length (Supabase handles hashing)
 - Supabase uses bcrypt for password hashing
 - No plain-text passwords stored or logged
 
 **Future Enhancements (Out of MVP Scope):**
+
 - Password strength meter (weak/medium/strong)
 - Common password check
 - Password history (prevent reuse)
@@ -1173,6 +1273,7 @@ const { data: { user }, error } = await supabase.auth.getUser();
 #### 3.2.2 Session Security
 
 **Protection Mechanisms:**
+
 - HttpOnly cookies prevent XSS token theft
 - Secure flag ensures HTTPS transmission
 - SameSite=Lax prevents most CSRF attacks
@@ -1180,6 +1281,7 @@ const { data: { user }, error } = await supabase.auth.getUser();
 - Automatic token rotation on refresh
 
 **Session Expiration:**
+
 - Access token: 1 hour
 - Refresh token: 7 days (configurable in Supabase)
 - Absolute session: 7 days (user must re-login after)
@@ -1195,6 +1297,7 @@ const { data: { user }, error } = await supabase.auth.getUser();
 **Implementation Strategy for MVP:**
 
 **Option 1: Supabase Built-in Rate Limiting (RECOMMENDED)**
+
 - Check Supabase project settings for Auth rate limiting configuration
 - Supabase Auth automatically provides rate limiting at the API level
 - Default limits typically: 10 requests per 10 seconds per IP
@@ -1205,11 +1308,13 @@ const { data: { user }, error } = await supabase.auth.getUser();
 **File:** `src/middleware/rateLimiter.ts` (new, if needed)
 
 **Limits:**
+
 - Login: 5 attempts per email per 15 minutes
 - Registration: 3 attempts per IP per hour
 - Session check: No limit (read-only)
 
 **Implementation Notes:**
+
 - **MVP Simplification:** Use in-memory Map with email/IP as keys
 - **Production Enhancement:** Use Redis or database for distributed rate limiting
 - Track attempt count and timestamp
@@ -1224,21 +1329,20 @@ const { data: { user }, error } = await supabase.auth.getUser();
 #### 3.2.4 SQL Injection Prevention
 
 **Protection:**
+
 - All queries use parameterized statements via Supabase client
 - Zod validation prevents malicious input
 - RLS policies provide additional data isolation
 
 **Examples:**
+
 ```typescript
 // Safe - uses parameterized query
-const { data } = await supabase
-  .from('recipes')
-  .select('*')
-  .eq('user_id', userId);
+const { data } = await supabase.from("recipes").select("*").eq("user_id", userId);
 
 // Unsafe - never construct raw SQL from user input (don't do this)
-const { data } = await supabase.rpc('raw_query', { 
-  sql: `SELECT * FROM recipes WHERE user_id = '${userId}'` 
+const { data } = await supabase.rpc("raw_query", {
+  sql: `SELECT * FROM recipes WHERE user_id = '${userId}'`,
 });
 ```
 
@@ -1247,11 +1351,13 @@ const { data } = await supabase.rpc('raw_query', {
 #### 3.2.5 XSS Prevention
 
 **Protection Mechanisms:**
+
 - React automatically escapes rendered content
 - HttpOnly cookies prevent script access to tokens
 - Content Security Policy headers (future enhancement)
 
 **Best Practices:**
+
 - Never use `dangerouslySetInnerHTML` with user content
 - Sanitize any HTML rendering (not applicable in MVP)
 - Validate and escape all user inputs
@@ -1267,6 +1373,7 @@ const { data } = await supabase.rpc('raw_query', {
 **Purpose:** Enable RLS policies that were commented out in initial migration.
 
 **VERIFICATION STATUS:** ✅ CONFIRMED - Initial schema migration `20260122120000_create_recipe_schema.sql` already includes:
+
 - All required tables with `user_id` columns (recipes, recipe_imports, recipe_revisions)
 - Foreign key constraints to `auth.users(id)`
 - `auth_event_logs` table for authentication event tracking
@@ -1285,6 +1392,7 @@ This migration will uncomment and activate all RLS policy definitions from lines
 **Note:** `auth_event_logs` table intentionally has NO RLS policies (service-role only access).
 
 **Migration Command:**
+
 ```bash
 supabase db push
 ```
@@ -1296,6 +1404,7 @@ supabase db push
 **File:** `.env` (update)
 
 **Required Variables:**
+
 ```bash
 # Existing
 SUPABASE_URL=https://your-project.supabase.co
@@ -1328,6 +1437,7 @@ interface ImportMetaEnv {
 #### 3.4.1 Manual Testing Scenarios
 
 **Registration:**
+
 1. Valid registration → Success, auto-login, redirect
 2. Duplicate email → Error message displayed
 3. Weak password → Validation error
@@ -1335,6 +1445,7 @@ interface ImportMetaEnv {
 5. Network error → Error message, form remains filled
 
 **Login:**
+
 1. Valid credentials → Success, redirect to recipes
 2. Invalid credentials → Generic error (don't reveal if email exists)
 3. Empty fields → Validation errors
@@ -1342,6 +1453,7 @@ interface ImportMetaEnv {
 5. Rate limiting → 429 error after 5 attempts
 
 **Session Management:**
+
 1. Logged in user can access protected pages
 2. Logged out user redirected to login
 3. Session persists across page reloads
@@ -1349,6 +1461,7 @@ interface ImportMetaEnv {
 5. Access token refreshes automatically
 
 **Recipe Access:**
+
 1. Authenticated user sees only their recipes
 2. Attempting to access other user's recipe → 404
 3. API calls without session → 401 error
@@ -1359,6 +1472,7 @@ interface ImportMetaEnv {
 #### 3.4.2 Security Testing
 
 **Tests to Perform:**
+
 1. **SQL Injection:** Attempt malicious input in email/password fields
 2. **XSS:** Attempt script injection in form fields
 3. **CSRF:** Attempt cross-site request without proper headers
@@ -1447,6 +1561,7 @@ interface ImportMetaEnv {
 ### 5.2 Compatibility with Existing Features
 
 **Preserved Behaviors:**
+
 - Recipe list, detail, create, edit, delete all work identically
 - Import flow with LLM extraction unchanged
 - Search by ingredients unchanged
@@ -1454,12 +1569,14 @@ interface ImportMetaEnv {
 - Validation rules for recipes unchanged
 
 **Added Requirements:**
+
 - User must be logged in to access any recipe feature
 - Recipes are now user-specific (RLS enforced)
 - Navigation includes logout option
 - API calls include session authentication
 
 **No Breaking Changes:**
+
 - Existing data models unchanged
 - Database schema compatible (just enables RLS)
 - API endpoint paths unchanged (added auth check only)
@@ -1489,16 +1606,19 @@ The following features are explicitly excluded from MVP but can be added:
 ### 6.1 New Files to Create
 
 **Pages:**
+
 - `src/pages/auth/login.astro`
 - `src/pages/auth/register.astro`
 
 **API Endpoints:**
+
 - `src/pages/api/auth/register.ts`
 - `src/pages/api/auth/login.ts`
 - `src/pages/api/auth/logout.ts`
 - `src/pages/api/auth/session.ts`
 
 **React Components:**
+
 - `src/components/auth/FormField.tsx`
 - `src/components/auth/SubmitButton.tsx`
 - `src/components/auth/LoginForm.tsx`
@@ -1506,38 +1626,47 @@ The following features are explicitly excluded from MVP but can be added:
 - `src/components/auth/AppHeader.tsx`
 
 **Services:**
+
 - `src/lib/services/auth/logAuthEvent.ts`
 
 **Utilities:**
+
 - `src/lib/validation/auth.ts`
 
 **Database:**
+
 - `src/db/supabase.server.ts`
 - `supabase/migrations/20260201000000_enable_auth_rls.sql`
 
 ### 6.2 Files to Modify
 
 **Configuration:**
+
 - `.env` (add SUPABASE_SERVICE_ROLE_KEY)
 - `.env.example` (add placeholder)
 - `src/env.d.ts` (add Locals types)
 
 **Middleware:**
+
 - `src/middleware/index.ts` (inject session)
 
 **Pages:**
+
 - `src/pages/index.astro` (add auth check)
 - `src/pages/recipes/[id].astro` (add auth check)
 
 **Layouts:**
+
 - `src/layouts/Layout.astro` (add AppHeader)
 
 **API Endpoints:**
+
 - `src/pages/api/recipes/index.ts` (add auth check)
 - `src/pages/api/recipes/[id].ts` (add auth check)
 - `src/pages/api/recipes/import.ts` (add auth check)
 
 **Services:**
+
 - `src/lib/services/recipes/listRecipes.ts` (add userId param)
 - `src/lib/services/recipes/getRecipeDetail.ts` (add userId param)
 - `src/lib/services/recipes/createRecipe.ts` (add userId param)
@@ -1552,6 +1681,7 @@ The following features are explicitly excluded from MVP but can be added:
 ### 7.1 Authentication API Contracts
 
 **POST /api/auth/register**
+
 ```typescript
 Request: { email: string; password: string; }
 Success: { success: true; user: User; session: Session; }
@@ -1559,20 +1689,44 @@ Error: { success: false; error: { code: string; message: string; fields?: Record
 ```
 
 **POST /api/auth/login**
+
 ```typescript
-Request: { email: string; password: string; }
-Success: { success: true; user: User; session: Session; }
-Error: { success: false; error: { code: string; message: string; } }
+Request: {
+  email: string;
+  password: string;
+}
+Success: {
+  success: true;
+  user: User;
+  session: Session;
+}
+Error: {
+  success: false;
+  error: {
+    code: string;
+    message: string;
+  }
+}
 ```
 
 **POST /api/auth/logout**
+
 ```typescript
-Request: none
-Success: { success: true; }
-Error: { success: false; error: { code: string; message: string; } }
+Request: none;
+Success: {
+  success: true;
+}
+Error: {
+  success: false;
+  error: {
+    code: string;
+    message: string;
+  }
+}
 ```
 
 **GET /api/auth/session**
+
 ```typescript
 Request: none (session cookie)
 Success: { authenticated: true; user: { id: string; email: string; } }
@@ -1582,6 +1736,7 @@ Alt: { authenticated: false; }
 ### 7.2 Modified Recipe API Contracts
 
 **All recipe endpoints now require authentication:**
+
 - Return 401 if no valid session
 - Automatically filter results by authenticated user via RLS
 - No changes to request/response schemas

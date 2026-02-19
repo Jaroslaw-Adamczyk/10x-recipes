@@ -6,11 +6,11 @@
 :root {
   /* M3 Shape System */
   --radius-none: 0px;
-  --radius-xs: 0.25rem;    /* 4px */
-  --radius-s: 0.5rem;      /* 8px */
-  --radius-m: 0.75rem;     /* 12px */
-  --radius-l: 1rem;        /* 16px */
-  --radius-xl: 1.75rem;    /* 28px */
+  --radius-xs: 0.25rem; /* 4px */
+  --radius-s: 0.5rem; /* 8px */
+  --radius-m: 0.75rem; /* 12px */
+  --radius-l: 1rem; /* 16px */
+  --radius-xl: 1.75rem; /* 28px */
   --radius-full: 9999px;
   --radius: var(--radius-m);
 
@@ -18,17 +18,17 @@
   /* Primary: Deep Indigo/Violet */
   --primary: oklch(0.45 0.16 270);
   --on-primary: oklch(0.98 0.01 270);
-  --primary-container: oklch(0.90 0.05 270);
+  --primary-container: oklch(0.9 0.05 270);
   --on-primary-container: oklch(0.25 0.12 270);
 
   /* Secondary: Muted Teal */
   --secondary: oklch(0.55 0.08 200);
   --on-secondary: oklch(0.98 0.01 200);
   --secondary-container: oklch(0.92 0.04 200);
-  --on-secondary-container: oklch(0.30 0.06 200);
+  --on-secondary-container: oklch(0.3 0.06 200);
 
   /* Tertiary: Warm Coral */
-  --tertiary: oklch(0.60 0.12 30);
+  --tertiary: oklch(0.6 0.12 30);
   --on-tertiary: oklch(0.98 0.01 30);
   --tertiary-container: oklch(0.94 0.04 30);
   --on-tertiary-container: oklch(0.35 0.08 30);
@@ -42,12 +42,12 @@
   /* Neutral / Surfaces */
   --background: oklch(0.98 0.01 270);
   --foreground: oklch(0.15 0.02 270);
-  
+
   --surface: oklch(0.98 0.01 270);
   --on-surface: oklch(0.15 0.02 270);
   --surface-variant: oklch(0.92 0.02 270);
   --on-surface-variant: oklch(0.45 0.04 270);
-  
+
   --card: var(--surface);
   --card-foreground: var(--on-surface);
   --popover: var(--surface);
@@ -58,8 +58,8 @@
   --muted-foreground: var(--on-surface-variant);
   --accent: var(--secondary-container);
   --accent-foreground: var(--on-secondary-container);
-  --border: oklch(0.90 0.02 270);
-  --input: oklch(0.90 0.02 270);
+  --border: oklch(0.9 0.02 270);
+  --input: oklch(0.9 0.02 270);
   --ring: var(--primary);
 
   /* Charts */
@@ -82,10 +82,10 @@
 
 .dark {
   /* M3 Color System - Dark Mode (OKLCH) */
-  --primary: oklch(0.82 0.10 270);
+  --primary: oklch(0.82 0.1 270);
   --on-primary: oklch(0.25 0.12 270);
   --primary-container: oklch(0.35 0.14 270);
-  --on-primary-container: oklch(0.90 0.05 270);
+  --on-primary-container: oklch(0.9 0.05 270);
 
   --secondary: oklch(0.85 0.06 200);
   --on-secondary: oklch(0.25 0.06 200);
@@ -93,8 +93,8 @@
   --on-secondary-container: oklch(0.92 0.04 200);
 
   --tertiary: oklch(0.88 0.08 30);
-  --on-tertiary: oklch(0.30 0.10 30);
-  --tertiary-container: oklch(0.40 0.12 30);
+  --on-tertiary: oklch(0.3 0.1 30);
+  --tertiary-container: oklch(0.4 0.12 30);
   --on-tertiary-container: oklch(0.94 0.04 30);
 
   --destructive: oklch(0.85 0.12 25);
@@ -104,7 +104,7 @@
 
   --background: oklch(0.15 0.02 270);
   --foreground: oklch(0.92 0.01 270);
-  
+
   --surface: oklch(0.15 0.02 270);
   --on-surface: oklch(0.92 0.01 270);
   --surface-variant: oklch(0.25 0.03 270);
@@ -119,8 +119,8 @@
   --muted-foreground: var(--on-surface-variant);
   --accent: var(--secondary-container);
   --accent-foreground: var(--on-secondary-container);
-  --border: oklch(0.30 0.03 270);
-  --input: oklch(0.30 0.03 270);
+  --border: oklch(0.3 0.03 270);
+  --input: oklch(0.3 0.03 270);
   --ring: var(--primary);
 
   --sidebar: var(--surface-variant);
@@ -172,7 +172,7 @@
   --color-on-surface: var(--on-surface);
   --color-surface-variant: var(--surface-variant);
   --color-on-surface-variant: var(--on-surface-variant);
-  
+
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
@@ -194,14 +194,21 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
   }
-  
+
   /* M3 Typography Defaults */
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-medium tracking-tight;
   }
-  
+
   /* M3 Interactive State Layers (Simulated via opacity) */
   .interactive-state-layer {
     @apply relative overflow-hidden;

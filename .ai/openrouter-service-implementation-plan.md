@@ -16,7 +16,7 @@ The `OpenRouterService` is a centralized server-side utility for interacting wit
 
 The constructor initializes the service with credentials and base configuration. It follows the pattern of environment-first configuration with optional overrides.
 
-- **Parameters**: 
+- **Parameters**:
   - `config` (Optional): An object containing `apiKey`, `baseUrl`, and metadata like `siteUrl` and `siteName`.
 - **Functionality**:
   - Sets the private `#apiKey` from `import.meta.env.OPENROUTER_API_KEY` if not provided.
@@ -28,6 +28,7 @@ The constructor initializes the service with credentials and base configuration.
 ### Methods
 
 #### 1. `completeChat(params: ChatParams): Promise<ChatResponse>`
+
 - **Description**: Sends a list of messages to a specific model.
 - **Challenges**:
   1. **Provider Inconsistency**: Different models handle parameters like `temperature` slightly differently.
@@ -37,6 +38,7 @@ The constructor initializes the service with credentials and base configuration.
   2. Focus on non-streaming responses for the MVP to simplify the service interface.
 
 #### 2. `extractData<T>(params: ExtractionParams): Promise<T>`
+
 - **Description**: Uses `response_format` to extract structured data into a TypeScript-typed object.
 - **Challenges**:
   1. **Schema Non-Compliance**: The model might fail to follow the `strict: true` schema if the prompt is ambiguous.
@@ -50,33 +52,33 @@ The constructor initializes the service with credentials and base configuration.
 The service implements OpenRouter API expectations as follows:
 
 1. **System Message**: Configured via the `messages` array as the initial context.
-   - *Example*: `{ role: 'system', content: 'You are a culinary expert.' }`
+   - _Example_: `{ role: 'system', content: 'You are a culinary expert.' }`
 2. **User Message**: Added to the `messages` array representing user input or task instructions.
-   - *Example*: `{ role: 'user', content: 'Format this ingredient list: [LIST]' }`
+   - _Example_: `{ role: 'user', content: 'Format this ingredient list: [LIST]' }`
 3. **Structured Responses (`response_format`)**: Enforced using the `json_schema` type.
-   - *Example*: 
+   - _Example_:
      ```javascript
-     response_format: { 
-       type: 'json_schema', 
-       json_schema: { 
-         name: 'recipe_detail', 
-         strict: true, 
-         schema: { 
-           type: 'object', 
-           properties: { 
-             name: { type: 'string' }, 
-             calories: { type: 'number' } 
-           }, 
-           required: ['name', 'calories'], 
-           additionalProperties: false 
-         } 
-       } 
+     response_format: {
+       type: 'json_schema',
+       json_schema: {
+         name: 'recipe_detail',
+         strict: true,
+         schema: {
+           type: 'object',
+           properties: {
+             name: { type: 'string' },
+             calories: { type: 'number' }
+           },
+           required: ['name', 'calories'],
+           additionalProperties: false
+         }
+       }
      }
      ```
 4. **Model Name**: Specified in the request body to route to the desired LLM.
-   - *Example*: `"google/gemini-2.0-flash-001"`
+   - _Example_: `"google/gemini-2.0-flash-001"`
 5. **Model Parameters**: Controls the behavior of the LLM generation.
-   - *Example*: `{ "temperature": 0.1, "max_tokens": 1000 }`
+   - _Example_: `{ "temperature": 0.1, "max_tokens": 1000 }`
 
 ## 4. Private Methods and Fields
 
@@ -109,7 +111,7 @@ The service addresses the following error scenarios:
 5. **Error & Retry Logic**: Add a wrapper around `#execute` that catches 429 errors and retries with exponential backoff.
 6. **Integration**: Connect the service to the recipe import logic in `src/lib/services/recipes/createRecipeImport.ts` to replace manual parsing with LLM-driven extraction.
 7. **Environment Configuration**: Add the required keys to `.env` and verify the service with a dedicated test script or API endpoint.
-Your task is to implement a service based on the provided implementation plan and implementation rules. Your goal is to create a detailed and accurate implementation that conforms to the provided plan, properly communicates with the API, and handles all specified functionalities and error cases.
+   Your task is to implement a service based on the provided implementation plan and implementation rules. Your goal is to create a detailed and accurate implementation that conforms to the provided plan, properly communicates with the API, and handles all specified functionalities and error cases.
 
 First, review the implementation plan:
 <implementation_plan>
@@ -133,40 +135,48 @@ Carefully analyze the implementation plan and rules. Pay special attention to se
 Follow these steps to implement the service:
 
 Service Structure:
+
 - Define the service class according to the implementation plan
 - Create a constructor initializing required fields
 - Apply appropriate access modifiers for fields and methods (public, private)
 
 Public Methods Implementation:
+
 - Implement public methods listed in the plan
 - Ensure each method is properly typed for both parameters and return values
 - Provide complete implementation of business logic described in the plan
 
 Private Methods Implementation:
+
 - Develop helper methods listed in the plan
 - Ensure proper encapsulation and separation of concerns
 - Implement logic for data formatting, sending requests, and processing responses
 
 API Integration:
+
 - Implement logic for communicating with external API
 - Handle all necessary request parameters and headers
 - Ensure proper processing of API responses
 
 Error Handling:
+
 - Implement comprehensive error handling for all scenarios
 - Apply appropriate retry mechanisms for transient errors
 - Provide clear error messages for different scenarios
 
 Security:
+
 - Implement recommended security practices mentioned in the plan
 - Ensure secure management of API keys and credentials
 - Apply input validation to prevent attacks
 
 Documentation and Typing:
+
 - Define and apply appropriate interfaces for parameters and return values
 - Ensure full type coverage for the entire service
 
 Testing:
+
 - Prepare service structure in a way that enables easy unit testing
 - Include the ability to mock external dependencies
 

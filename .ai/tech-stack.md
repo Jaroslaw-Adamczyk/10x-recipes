@@ -1,6 +1,5 @@
 # Technology Stack (English translation)
 
-
 ## Frontend – Astro 5 with React 19, TypeScript 5, Tailwind 4, and shadcn/ui
 
 - **Astro 5** (latest major release per the official WithAstro docs) keeps pages fast by shipping zero JavaScript by default, leaving React islands only where needed for interactivity.

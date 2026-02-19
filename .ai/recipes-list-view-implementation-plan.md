@@ -1,12 +1,15 @@
 # View Implementation Plan Recipes List
 
 ## 1. Overview
+
 Recipes List is the home view that lets users browse, search, and manage recipe summaries. It provides a single entry point to add recipes (URL import or manual), shows processing status and errors inline, and links to the detail view for full content.
 
 ## 2. View Routing
+
 Route: `/` (Astro page `src/pages/index.astro`).
 
 ## 3. Component Structure
+
 - `RecipeListPage`
 - `RecipeListView`
 - `SearchBar`
@@ -22,7 +25,9 @@ Route: `/` (Astro page `src/pages/index.astro`).
 - `RefreshButton`
 
 ## 4. Component Details
+
 ### RecipeListPage
+
 - Component description: Astro page wrapper that loads initial list data and renders the React view.
 - Main elements: `Layout`, `RecipeListView`.
 - Handled events: none.
@@ -31,6 +36,7 @@ Route: `/` (Astro page `src/pages/index.astro`).
 - Props: none.
 
 ### RecipeListView
+
 - Component description: Main interactive shell for list view, search, add, refresh, and list actions.
 - Main elements: search bar, actions row (add/refresh), error banner, list, empty states, add modal, delete dialog.
 - Handled events: search submit/change, open add modal, close modal, refresh list, delete recipe.
@@ -40,6 +46,7 @@ Route: `/` (Astro page `src/pages/index.astro`).
   - `initialList: RecipeListDto`
 
 ### SearchBar
+
 - Component description: Input + helper text for ingredient keyword search.
 - Main elements: text input, helper text, optional clear button.
 - Handled events: input change, submit, clear.
@@ -53,6 +60,7 @@ Route: `/` (Astro page `src/pages/index.astro`).
   - `disabled?: boolean`
 
 ### RecipeList
+
 - Component description: Renders list of recipe summary rows with status and inline error.
 - Main elements: `ul`, `RecipeRow` children.
 - Handled events: pass-through row click, delete click.
@@ -64,6 +72,7 @@ Route: `/` (Astro page `src/pages/index.astro`).
   - `onDelete(item: RecipeListItemDto): void`
 
 ### RecipeRow
+
 - Component description: Summary row showing title, ingredient preview, status chip, and inline error.
 - Main elements: clickable container (link), title, ingredient preview list, status indicator, error text, delete action.
 - Handled events: click to open detail, click delete, key navigation (Enter/Space).
@@ -75,6 +84,7 @@ Route: `/` (Astro page `src/pages/index.astro`).
   - `onDelete(): void`
 
 ### StatusIndicator
+
 - Component description: Visual status chip for `processing`, `succeeded`, `failed`, with optional loading state.
 - Main elements: badge/chip, optional spinner.
 - Handled events: none.
@@ -84,6 +94,7 @@ Route: `/` (Astro page `src/pages/index.astro`).
   - `status: RecipeStatus`
 
 ### AddRecipeModal
+
 - Component description: Modal entry point to import URL or add manual recipe.
 - Main elements: dialog, tabs/segmented control, `ImportRecipeForm`, `ManualRecipeForm`.
 - Handled events: open, close, submit for active tab, tab switch.
@@ -97,6 +108,7 @@ Route: `/` (Astro page `src/pages/index.astro`).
   - `isSubmitting: boolean`
 
 ### ImportRecipeForm
+
 - Component description: Form for URL import.
 - Main elements: URL input, submit/cancel buttons, inline error text.
 - Handled events: submit, cancel, input change.
@@ -109,6 +121,7 @@ Route: `/` (Astro page `src/pages/index.astro`).
   - `error?: string | null`
 
 ### ManualRecipeForm
+
 - Component description: Form for manual recipe creation with multiline inputs.
 - Main elements: title input, ingredients textarea, steps textarea, cook time input, submit/cancel.
 - Handled events: submit, cancel, input change.
@@ -125,6 +138,7 @@ Route: `/` (Astro page `src/pages/index.astro`).
   - `error?: string | null`
 
 ### DeleteConfirmationDialog
+
 - Component description: Confirms permanent deletion for non-failed recipes.
 - Main elements: dialog content, confirm/cancel buttons.
 - Handled events: confirm, cancel.
@@ -137,6 +151,7 @@ Route: `/` (Astro page `src/pages/index.astro`).
   - `onClose(): void`
 
 ### EmptyState
+
 - Component description: Shows “no recipes yet” or “no search matches”.
 - Main elements: title, helper text, optional CTA to add recipe.
 - Handled events: CTA click to open add modal.
@@ -147,6 +162,7 @@ Route: `/` (Astro page `src/pages/index.astro`).
   - `onAdd(): void`
 
 ### ErrorBanner
+
 - Component description: Dismissible error banner for network or API failures.
 - Main elements: alert container, message, dismiss button.
 - Handled events: dismiss.
@@ -157,6 +173,7 @@ Route: `/` (Astro page `src/pages/index.astro`).
   - `onDismiss(): void`
 
 ### RefreshButton
+
 - Component description: Manual refresh trigger and optional loading state.
 - Main elements: button, spinner.
 - Handled events: click refresh.
@@ -167,7 +184,9 @@ Route: `/` (Astro page `src/pages/index.astro`).
   - `loading: boolean`
 
 ## 5. Types
+
 Use existing DTOs and add view models:
+
 - `RecipeListDto`: `{ data: RecipeListItemDto[], next_cursor: string | null }`.
 - `RecipeListItemDto`: `{ id, title, status, error_message, created_at, updated_at, ingredients_preview }`.
 - `RecipeListQuery`: `{ status?: RecipeStatus, q?: string, limit?: number, cursor?: string, sort?: string }`.
@@ -175,6 +194,7 @@ Use existing DTOs and add view models:
 - `RecipeImportCreateCommand`: `{ source_url }`.
 
 New view models:
+
 - `RecipeListViewModel`
   - `items: RecipeListItemDto[]`
   - `query: RecipeListQuery`
@@ -189,6 +209,7 @@ New view models:
   - `context?: "load" | "search" | "import" | "create" | "delete" | "refresh"`
 
 ## 6. State Management
+
 - Local state in `RecipeListView`:
   - `items: RecipeListItemDto[]`
   - `query: RecipeListQuery`
@@ -204,6 +225,7 @@ New view models:
   - Returns `{ items, query, setQuery, reload, importRecipe, createRecipe, deleteRecipe, loading, error }`.
 
 ## 7. API Integration
+
 - GET `/api/recipes`
   - Query: `RecipeListQuery` (`q` normalized: trim + lowercase).
   - Response: `RecipeListDto`.
@@ -221,6 +243,7 @@ New view models:
   - If status is `failed`, delete without confirmation; otherwise show dialog.
 
 ## 8. User Interactions
+
 - Search:
   - User types ingredient keywords; submit normalizes and triggers GET.
   - Clear resets query and reloads full list.
@@ -237,6 +260,7 @@ New view models:
   - For others: show confirmation dialog, then delete.
 
 ## 9. Conditions and Validation
+
 - Search input:
   - Trim whitespace and lowercase before sending.
   - Empty input should not call API; show helper text instead.
@@ -252,6 +276,7 @@ New view models:
   - Only render valid `RecipeStatus` values.
 
 ## 10. Error Handling
+
 - GET `/api/recipes`:
   - 400: show inline error near search, keep previous list.
   - 401: show banner (auth UI omitted per MVP).
@@ -265,6 +290,7 @@ New view models:
   - 500/network: show error banner; do not remove item.
 
 ## 11. Implementation Steps
+
 1. Create `src/pages/index.astro` to fetch initial list and pass to `RecipeListView`.
 2. Build `RecipeListView` with search bar, list, add modal, and error banner.
 3. Implement `SearchBar` with normalization and helper text.
