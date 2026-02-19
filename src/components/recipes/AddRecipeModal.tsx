@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { RecipeCreateCommand, RecipeImportCreateCommand } from "@/types";
 import { ImportRecipeForm } from "./ImportRecipeForm";
 import { ManualRecipeForm } from "./ManualRecipeForm";
@@ -27,9 +28,11 @@ export const AddRecipeModal = ({
   const [importDirty, setImportDirty] = useState(false);
   const [manualDirty, setManualDirty] = useState(false);
 
-  if (!open) {
-    return null;
-  }
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      handleClose();
+    }
+  };
 
   const handleClose = () => {
     const isDirty = tab === "import" ? importDirty : manualDirty;
@@ -44,22 +47,19 @@ export const AddRecipeModal = ({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center  bg-black/40 px-4 py-8"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="add-recipe-title"
-      aria-describedby="add-recipe-description"
-      data-testid="add-recipe-modal"
-    >
-      <div className="max-w-4xl w-full rounded-lg border border-border bg-background text-foreground shadow-lg max-h-10/12 overflow-hidden flex flex-col">
+    <Dialog open={open} onOpenChange={handleOpenChange} modal>
+      <DialogContent
+        className="max-w-4xl max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden"
+        data-testid="add-recipe-modal"
+      >
         <div className="p-6 overflow-auto">
-          <span className="text-xl font-semibold" id="add-recipe-title">
-            Add a recipe
-          </span>
-          <p className="mt-2 text-sm text-muted-foreground" id="add-recipe-description">
-            Import a recipe URL or enter the recipe manually.
-          </p>
+          <DialogHeader>
+            <DialogTitle id="add-recipe-title">Add a recipe</DialogTitle>
+            <DialogDescription id="add-recipe-description">
+              Import a recipe URL or enter the recipe manually.
+            </DialogDescription>
+          </DialogHeader>
+
           <div className="mt-4 flex flex-wrap gap-2">
             <Button
               variant={tab === "import" ? "default" : "outline"}
@@ -96,7 +96,7 @@ export const AddRecipeModal = ({
             )}
           </div>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };
