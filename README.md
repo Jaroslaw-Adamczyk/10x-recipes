@@ -22,14 +22,14 @@ Recipes Saver centralizes text-only cooking instructions sourced from arbitrary 
 
 ### Frontend
 
-- [Astro](https://astro.build/) ^5.13.7 — SSR framework with React islands
-- [React](https://react.dev/) ^19.1.1 — interactive UI components
-- [TypeScript](https://www.typescriptlang.org/) 5 — type-safe JavaScript
-- [Tailwind CSS](https://tailwindcss.com/) ^4.1.13 — utility-first CSS
-- [shadcn/ui](https://ui.shadcn.com/) (Radix UI primitives) — accessible Dialog, Tooltip, Label components
-- [React Hook Form](https://react-hook-form.com/) ^7.71.1 + [Zod](https://zod.dev/) ^3.25.76 — form state management and schema validation
-- [dnd-kit](https://dndkit.com/) ^6.3.1 — drag-and-drop for sortable lists
-- [Heroicons](https://heroicons.com/) ^2.2.0 — icons
+- [Astro](https://astro.build/) — SSR framework with React islands
+- [React](https://react.dev/) — interactive UI components
+- [TypeScript](https://www.typescriptlang.org/) — type-safe JavaScript
+- [Tailwind CSS](https://tailwindcss.com/) — utility-first CSS
+- [shadcn/ui](https://ui.shadcn.com/) — accessible Dialog, Tooltip, Label components
+- [React Hook Form](https://react-hook-form.com/) + [Zod](https://zod.dev/) — form state management and schema validation
+- [dnd-kit](https://dndkit.com/) — drag-and-drop for sortable lists
+- [Heroicons](https://heroicons.com/) — icons
 
 ### Backend
 
@@ -43,16 +43,16 @@ Recipes Saver centralizes text-only cooking instructions sourced from arbitrary 
 
 - [GitHub Actions](https://github.com/features/actions) — linting, formatting, testing, and builds
 - [Cloudflare Pages](https://pages.cloudflare.com/) — deployment target
-- [Wrangler](https://developers.cloudflare.com/workers/wrangler/) ^4.66.0 — Cloudflare local preview and deployment
+- [Wrangler](https://developers.cloudflare.com/workers/wrangler/) — Cloudflare local preview and deployment
 
 ### Testing
 
-- [Vitest](https://vitest.dev/) ^4.0.18 — unit and integration tests
-- [Playwright](https://playwright.dev/) ^1.58.1 — end-to-end and visual testing
+- [Vitest](https://vitest.dev/) — unit and integration tests
+- [Playwright](https://playwright.dev/) — end-to-end and visual testing
 
 ### Tooling
 
-- [ESLint](https://eslint.org/) 9 + [Prettier](https://prettier.io/) — formatting and code quality
+- [ESLint](https://eslint.org/) + [Prettier](https://prettier.io/) — formatting and code quality
 - [Husky](https://typicode.github.io/husky/) + [lint-staged](https://github.com/lint-staged/lint-staged) — pre-commit hooks for `.ts`, `.tsx`, `.astro`, and other assets
 
 ## Getting Started Locally
