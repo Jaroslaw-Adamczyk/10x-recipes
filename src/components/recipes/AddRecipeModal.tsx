@@ -48,53 +48,48 @@ export const AddRecipeModal = ({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange} modal>
-      <DialogContent
-        className="max-w-4xl max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden"
-        data-testid="add-recipe-modal"
-      >
-        <div className="p-6 overflow-auto">
-          <DialogHeader>
-            <DialogTitle id="add-recipe-title">Add a recipe</DialogTitle>
-            <DialogDescription id="add-recipe-description">
-              Import a recipe URL or enter the recipe manually.
-            </DialogDescription>
-          </DialogHeader>
+      <DialogContent className="max-w-4xl" data-testid="add-recipe-modal">
+        <DialogHeader>
+          <DialogTitle id="add-recipe-title">Add a recipe</DialogTitle>
+          <DialogDescription id="add-recipe-description">
+            Import a recipe URL or enter the recipe manually.
+          </DialogDescription>
+        </DialogHeader>
 
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Button
-              variant={tab === "import" ? "default" : "outline"}
-              onClick={() => setTab("import")}
-              data-testid="tab-import"
-            >
-              Import URL
-            </Button>
-            <Button
-              variant={tab === "manual" ? "default" : "outline"}
-              onClick={() => setTab("manual")}
-              data-testid="tab-manual"
-            >
-              Manual entry
-            </Button>
-          </div>
-          <div className="mt-6">
-            {tab === "import" ? (
-              <ImportRecipeForm
-                onSubmit={(command) => onImport(command)}
-                onCancel={handleClose}
-                isSubmitting={isSubmitting}
-                error={importError}
-                onDirtyChange={setImportDirty}
-              />
-            ) : (
-              <ManualRecipeForm
-                onSubmit={(command) => onCreate(command)}
-                onCancel={handleClose}
-                isSubmitting={isSubmitting}
-                error={createError}
-                onDirtyChange={setManualDirty}
-              />
-            )}
-          </div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button
+            variant={tab === "import" ? "default" : "outline"}
+            onClick={() => setTab("import")}
+            data-testid="tab-import"
+          >
+            Import URL
+          </Button>
+          <Button
+            variant={tab === "manual" ? "default" : "outline"}
+            onClick={() => setTab("manual")}
+            data-testid="tab-manual"
+          >
+            Manual entry
+          </Button>
+        </div>
+        <div className="mt-6">
+          {tab === "import" ? (
+            <ImportRecipeForm
+              onSubmit={(command) => onImport(command)}
+              onCancel={handleClose}
+              isSubmitting={isSubmitting}
+              error={importError}
+              onDirtyChange={setImportDirty}
+            />
+          ) : (
+            <ManualRecipeForm
+              onSubmit={(command) => onCreate(command)}
+              onCancel={handleClose}
+              isSubmitting={isSubmitting}
+              error={createError}
+              onDirtyChange={setManualDirty}
+            />
+          )}
         </div>
       </DialogContent>
     </Dialog>

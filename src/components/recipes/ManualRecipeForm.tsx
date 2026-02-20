@@ -1,9 +1,12 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import type { RecipeCreateCommand } from "@/types";
 import { normalizeIngredientName, normalizeText } from "./utils/recipeListUtils";
-import { IngredientListInput, type IngredientItem } from "./IngredientListInput";
-import { StepListInput, type StepItem } from "./StepListInput";
+import { recipeFormSchema, type RecipeFormValues } from "./utils/recipeFormSchema";
+import { IngredientListInput } from "./IngredientListInput";
+import { StepListInput } from "./StepListInput";
 
 interface ManualRecipeFormProps {
   onSubmit: (command: RecipeCreateCommand) => void;
@@ -14,32 +17,32 @@ interface ManualRecipeFormProps {
 }
 
 export const ManualRecipeForm = ({ onSubmit, onCancel, isSubmitting, error, onDirtyChange }: ManualRecipeFormProps) => {
-  const titleRef = useRef<HTMLInputElement>(null);
-  const errorId = useId();
-  const [title, setTitle] = useState("");
-  const [ingredients, setIngredients] = useState<IngredientItem[]>([{ id: crypto.randomUUID(), value: "" }]);
-  const [steps, setSteps] = useState<StepItem[]>([{ id: crypto.randomUUID(), value: "" }]);
-  const [cookTime, setCookTime] = useState("");
-  const [localError, setLocalError] = useState<string | null>(null);
-  useEffect(() => {
-    setLocalError(null);
-  }, [error]);
+  const {
+    register,
+    control,
+    handleSubmit,
+    setFocus,
+    formState: { errors, isDirty },
+  } = useForm<RecipeFormValues>({
+    resolver: zodResolver(recipeFormSchema),
+    defaultValues: {
+      title: "",
+      ingredients: [{ id: crypto.randomUUID(), value: "" }],
+      steps: [{ id: crypto.randomUUID(), value: "" }],
+      cookTime: "",
+    },
+  });
 
   useEffect(() => {
-    const isDirty =
-      title.trim().length > 0 ||
-      ingredients.some((ing) => ing.value.trim().length > 0) ||
-      steps.some((step) => step.value.trim().length > 0) ||
-      cookTime.trim().length > 0;
     onDirtyChange(isDirty);
-  }, [cookTime, ingredients, onDirtyChange, steps, title]);
+  }, [isDirty, onDirtyChange]);
 
   useEffect(() => {
-    requestAnimationFrame(() => titleRef.current?.focus());
-  }, []);
+    requestAnimationFrame(() => setFocus("title"));
+  }, [setFocus]);
 
-  const buildIngredients = (items: IngredientItem[]) =>
-    items
+  const onFormSubmit = (data: RecipeFormValues) => {
+    const ingredientItems = data.ingredients
       .map((ing) => normalizeText(ing.value))
       .filter(Boolean)
       .map((line, index) => ({
@@ -48,8 +51,7 @@ export const ManualRecipeForm = ({ onSubmit, onCancel, isSubmitting, error, onDi
         position: index + 1,
       }));
 
-  const buildSteps = (items: StepItem[]) =>
-    items
+    const stepItems = data.steps
       .map((step) => normalizeText(step.value))
       .filter(Boolean)
       .map((line, index) => ({
@@ -57,34 +59,10 @@ export const ManualRecipeForm = ({ onSubmit, onCancel, isSubmitting, error, onDi
         position: index + 1,
       }));
 
-  const handleSubmit = () => {
-    const trimmedTitle = normalizeText(title);
-    if (!trimmedTitle) {
-      setLocalError("Title is required.");
-      return;
-    }
+    const cookTimeValue = data.cookTime.trim() === "" ? null : Number(data.cookTime);
 
-    const ingredientItems = buildIngredients(ingredients);
-    if (ingredientItems.length === 0) {
-      setLocalError("Add at least one ingredient.");
-      return;
-    }
-
-    const stepItems = buildSteps(steps);
-    if (stepItems.length === 0) {
-      setLocalError("Add at least one step.");
-      return;
-    }
-
-    const cookTimeValue = cookTime.trim() === "" ? null : Number(cookTime);
-    if (cookTimeValue !== null && (Number.isNaN(cookTimeValue) || cookTimeValue < 0)) {
-      setLocalError("Cook time must be a positive number.");
-      return;
-    }
-
-    setLocalError(null);
     onSubmit({
-      title: trimmedTitle,
+      title: normalizeText(data.title),
       cook_time_minutes: cookTimeValue,
       source_url: null,
       ingredients: ingredientItems,
@@ -92,63 +70,84 @@ export const ManualRecipeForm = ({ onSubmit, onCancel, isSubmitting, error, onDi
     });
   };
 
-  const message = error ?? localError;
-
   return (
-    <div className="flex flex-col gap-4">
+    <form className="flex flex-col gap-4" onSubmit={handleSubmit(onFormSubmit)} noValidate>
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium text-foreground" htmlFor="manual-title">
           Title
         </label>
+
         <input
           id="manual-title"
-          ref={titleRef}
-          className="h-10 rounded-md border border-border bg-background px-3 text-sm text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           type="text"
-          value={title}
-          onChange={(event) => setTitle(event.target.value)}
           placeholder="Recipe title"
           disabled={isSubmitting}
-          aria-invalid={Boolean(message)}
-          aria-describedby={message ? errorId : undefined}
+          aria-invalid={Boolean(errors.title)}
           data-testid="input-recipe-title"
+          {...register("title")}
         />
+
+        {errors.title ? <p className="text-xs text-destructive">{errors.title.message}</p> : null}
       </div>
 
-      <IngredientListInput ingredients={ingredients} onChange={setIngredients} disabled={isSubmitting} />
+      <Controller
+        name="ingredients"
+        control={control}
+        render={({ field, fieldState }) => (
+          <div className="flex flex-col gap-1.5">
+            <IngredientListInput ingredients={field.value} onChange={field.onChange} disabled={isSubmitting} />
 
-      <StepListInput steps={steps} onChange={setSteps} disabled={isSubmitting} />
+            {fieldState.error ? <p className="text-xs text-destructive">{fieldState.error.message}</p> : null}
+          </div>
+        )}
+      />
+
+      <Controller
+        name="steps"
+        control={control}
+        render={({ field, fieldState }) => (
+          <div className="flex flex-col gap-1.5">
+            <StepListInput steps={field.value} onChange={field.onChange} disabled={isSubmitting} />
+
+            {fieldState.error ? <p className="text-xs text-destructive">{fieldState.error.message}</p> : null}
+          </div>
+        )}
+      />
 
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium text-foreground" htmlFor="manual-cooktime">
           Cook time (minutes)
         </label>
+
         <input
           id="manual-cooktime"
-          className="h-10 w-40 rounded-md border border-border bg-background px-3 text-sm text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          className="h-10 w-40 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           type="number"
           min={0}
-          value={cookTime}
-          onChange={(event) => setCookTime(event.target.value)}
           placeholder="30"
           disabled={isSubmitting}
           data-testid="input-recipe-cooktime"
+          {...register("cookTime")}
         />
+
+        {errors.cookTime ? <p className="text-xs text-destructive">{errors.cookTime.message}</p> : null}
       </div>
 
-      {message ? (
-        <p className="text-xs text-destructive" id={errorId}>
-          {message}
+      {error ? (
+        <p className="text-xs text-destructive" role="alert">
+          {error}
         </p>
       ) : null}
       <div className="flex flex-wrap justify-end gap-3">
-        <Button variant="outline" onClick={onCancel} disabled={isSubmitting} data-testid="button-cancel">
+        <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting} data-testid="button-cancel">
           Cancel
         </Button>
-        <Button onClick={handleSubmit} disabled={isSubmitting} data-testid="button-create-recipe">
+
+        <Button type="submit" disabled={isSubmitting} data-testid="button-create-recipe">
           {isSubmitting ? "Saving..." : "Create recipe"}
         </Button>
       </div>
-    </div>
+    </form>
   );
 };
