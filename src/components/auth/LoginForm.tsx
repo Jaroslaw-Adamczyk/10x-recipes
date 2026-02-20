@@ -102,15 +102,25 @@ export function LoginForm({ redirectTo = "/", initialError }: LoginFormProps) {
             placeholder="you@example.com"
           />
 
-          <FormField
-            label="Password"
-            type="password"
-            {...register("password")}
-            error={errors.password?.message}
-            required
-            autoComplete="current-password"
-            placeholder="Enter your password"
-          />
+          <div>
+            <FormField
+              label="Password"
+              type="password"
+              {...register("password")}
+              error={errors.password?.message}
+              required
+              autoComplete="current-password"
+              placeholder="Enter your password"
+            />
+            <div className="mt-1 text-right">
+              <a
+                href="/auth/forgot-password"
+                className="text-xs text-muted-foreground hover:text-primary hover:underline"
+              >
+                Forgot password?
+              </a>
+            </div>
+          </div>
         </CardContent>
 
         <CardFooter className="flex flex-col space-y-4">

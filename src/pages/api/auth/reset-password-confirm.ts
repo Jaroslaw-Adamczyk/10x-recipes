@@ -1,16 +1,14 @@
 import type { APIRoute } from "astro";
 
-import { registerSchema } from "@/lib/validation/auth";
+import { resetPasswordConfirmSchema } from "@/lib/validation/auth";
 
 export const prerender = false;
 
 export const POST: APIRoute = async ({ request, locals }) => {
   try {
-    // Parse request body
     const body = await request.json();
 
-    // Validate input with Zod
-    const parseResult = registerSchema.safeParse(body);
+    const parseResult = resetPasswordConfirmSchema.safeParse(body);
     if (!parseResult.success) {
       const fieldErrors = parseResult.error.flatten().fieldErrors;
       return new Response(
@@ -29,30 +27,43 @@ export const POST: APIRoute = async ({ request, locals }) => {
       );
     }
 
-    const { email, password } = parseResult.data;
+    const { password } = parseResult.data;
 
-    // Attempt to create user with Supabase Auth
-    const { data, error } = await locals.supabase.auth.signUp({
-      email,
-      password,
-    });
+    // Session was established by exchangeCodeForSession on the reset-password page
+    const {
+      data: { user },
+    } = await locals.supabase.auth.getUser();
 
-    if (error) {
-      // Handle specific error cases
-      let message = "Unable to create account. Please try again.";
-      let code = "REGISTRATION_ERROR";
-
-      if (error.code === "email_exists") {
-        message = "An account with this email already exists";
-        code = "EMAIL_ALREADY_EXISTS";
-      }
-
+    if (!user) {
       return new Response(
         JSON.stringify({
           success: false,
           error: {
-            code,
-            message,
+            code: "INVALID_SESSION",
+            message: "Your reset session has expired. Please request a new reset link.",
+          },
+        }),
+        {
+          status: 401,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    const { error: updateError } = await locals.supabase.auth.updateUser({
+      password,
+    });
+
+    if (updateError) {
+      const isSamePassword = updateError.code === "same_password";
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: {
+            code: isSamePassword ? "SAME_PASSWORD" : "UPDATE_FAILED",
+            message: isSamePassword
+              ? "New password must be different from your current password."
+              : "Unable to update password. Please try again.",
           },
         }),
         {
@@ -62,29 +73,17 @@ export const POST: APIRoute = async ({ request, locals }) => {
       );
     }
 
-    // Success - return user and session data
     return new Response(
       JSON.stringify({
         success: true,
-        user: {
-          id: data.user?.id,
-          email: data.user?.email,
-        },
-        session: data.session
-          ? {
-              access_token: data.session.access_token,
-              refresh_token: data.session.refresh_token,
-              expires_in: data.session.expires_in,
-            }
-          : null,
+        message: "Password has been reset successfully.",
       }),
       {
         status: 200,
         headers: { "Content-Type": "application/json" },
       }
     );
-  } catch (error) {
-    console.error("Registration error:", error);
+  } catch {
     return new Response(
       JSON.stringify({
         success: false,

@@ -72,20 +72,20 @@ Recipes Saver centralizes text-only cooking instructions sourced from arbitrary 
 
 ## Available Scripts
 
-| Command | Description |
-| --- | --- |
-| `npm run dev` | Start the Astro dev server with hot reload |
-| `npm run dev:e2e` | Start the dev server in test mode |
-| `npm run build` | Build the site for production |
-| `npm run lint` | Run ESLint checks |
-| `npm run lint:fix` | Fix ESLint issues automatically |
-| `npm run format` | Run Prettier across the repo |
-| `npm run test` | Run unit and integration tests with Vitest |
-| `npm run test:ui` | Run Vitest with interactive UI |
-| `npm run test:coverage` | Run Vitest with coverage report |
-| `npm run test:e2e` | Run end-to-end tests with Playwright |
-| `npm run test:e2e:ui` | Run Playwright tests with interactive UI |
-| `npm run astro` | Expose the Astro CLI for manual commands |
+| Command                         | Description                                              |
+| ------------------------------- | -------------------------------------------------------- |
+| `npm run dev`                   | Start the Astro dev server with hot reload               |
+| `npm run dev:e2e`               | Start the dev server in test mode                        |
+| `npm run build`                 | Build the site for production                            |
+| `npm run lint`                  | Run ESLint checks                                        |
+| `npm run lint:fix`              | Fix ESLint issues automatically                          |
+| `npm run format`                | Run Prettier across the repo                             |
+| `npm run test`                  | Run unit and integration tests with Vitest               |
+| `npm run test:ui`               | Run Vitest with interactive UI                           |
+| `npm run test:coverage`         | Run Vitest with coverage report                          |
+| `npm run test:e2e`              | Run end-to-end tests with Playwright                     |
+| `npm run test:e2e:ui`           | Run Playwright tests with interactive UI                 |
+| `npm run astro`                 | Expose the Astro CLI for manual commands                 |
 | `npx wrangler pages dev ./dist` | Preview the production build in a Cloudflare environment |
 
 ## Project Structure
@@ -132,7 +132,6 @@ Recipes Saver centralizes text-only cooking instructions sourced from arbitrary 
 - LLM-powered imports that validate single recipes, log failures or retries, and represent processing status in the UI
 - Manual creation, editing, deletion, and ingredient keyword search that mirror imported recipe validation
 - Authentication via email/password so every recipe collection stays private to the signed-in user
-
 
 ## License
 

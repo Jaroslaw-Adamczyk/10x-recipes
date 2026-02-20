@@ -8,10 +8,14 @@ const PUBLIC_PATHS = [
   "/auth/login",
   "/auth/register",
   "/auth/registration-success",
+  "/auth/reset-password",
+  "/auth/forgot-password",
   // Auth API endpoints
   "/api/auth/login",
   "/api/auth/register",
   "/api/auth/logout",
+  "/api/auth/reset-password",
+  "/api/auth/reset-password-confirm",
 ];
 
 export const onRequest = defineMiddleware(async (context, next) => {
@@ -30,6 +34,13 @@ export const onRequest = defineMiddleware(async (context, next) => {
   context.locals.supabase = supabase;
   context.locals.session = null; // Not used - we use context.locals.user instead
   context.locals.user = user ?? null;
+
+  // Supabase sometimes redirects to site_url root with ?code= (PKCE). Send to reset-password page.
+  if (context.url.pathname === "/" && context.url.searchParams.has("code")) {
+    const redirectUrl = new URL("/auth/reset-password", context.url.origin);
+    context.url.searchParams.forEach((value, key) => redirectUrl.searchParams.set(key, value));
+    return context.redirect(redirectUrl.pathname + redirectUrl.search);
+  }
 
   // Skip auth check for public paths
   if (PUBLIC_PATHS.includes(context.url.pathname)) {
