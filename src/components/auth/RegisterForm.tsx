@@ -19,11 +19,7 @@ const registerSchema = z
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
-interface RegisterFormProps {
-  redirectTo?: string;
-}
-
-export function RegisterForm({ redirectTo = "/" }: RegisterFormProps) {
+export function RegisterForm() {
   const [formError, setFormError] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(false);
 
@@ -79,8 +75,7 @@ export function RegisterForm({ redirectTo = "/" }: RegisterFormProps) {
         return;
       }
 
-      // Success - redirect to target page
-      window.location.assign(redirectTo);
+      window.location.assign("/auth/registration-success");
     } catch {
       setFormError("Unable to create account. Please try again.");
       resetField("password");

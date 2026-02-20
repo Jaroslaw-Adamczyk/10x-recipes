@@ -7,6 +7,7 @@ const PUBLIC_PATHS = [
   // Server-Rendered Astro Pages
   "/auth/login",
   "/auth/register",
+  "/auth/registration-success",
   // Auth API endpoints
   "/api/auth/login",
   "/api/auth/register",
