@@ -38,6 +38,21 @@ export const POST: APIRoute = async ({ request, locals }) => {
     });
 
     if (error) {
+      if (error.code === "email_not_confirmed") {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: {
+              code: "EMAIL_NOT_CONFIRMED",
+              message: "Please confirm your email before logging in.",
+            },
+          }),
+          {
+            status: 401,
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+      }
       // Generic error message for security (don't reveal if email exists)
       return new Response(
         JSON.stringify({
@@ -73,8 +88,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
         headers: { "Content-Type": "application/json" },
       }
     );
-  } catch (error) {
-    console.error("Login error:", error);
+  } catch {
     return new Response(
       JSON.stringify({
         success: false,
