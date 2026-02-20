@@ -4,9 +4,11 @@ import { UserMenu } from "../components/auth/UserMenu";
 
 interface Props {
   title?: string;
+  description?: string;
 }
 
-const { title = "Recipes Saver" } = Astro.props;
+const { title = "ChiefStack", description = "Save, organize and discover recipes from the web or add your own." } =
+  Astro.props;
 
 // Get user state from locals (set by middleware)
 const user = Astro.locals.user;
@@ -19,6 +21,7 @@ const user = Astro.locals.user;
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/png" href="/chiefStack.svg" />
     <meta name="generator" content={Astro.generator} />
+    <meta name="description" content={description} />
     <title>{title}</title>
   </head>
   <body class="bg-muted/60">

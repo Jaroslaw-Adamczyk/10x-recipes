@@ -36,7 +36,7 @@ export const StatusIndicator = ({ status, size = "md" }: StatusIndicatorProps) =
   const Icon = iconMap[status];
 
   const content = (
-    <span className="relative inline-flex items-center" aria-label={tooltip ?? status}>
+    <span className="relative inline-flex items-center" role="img" aria-label={tooltip ?? status}>
       <Icon className={cn(sizeMap[size], colorMap[status])} />
     </span>
   );
