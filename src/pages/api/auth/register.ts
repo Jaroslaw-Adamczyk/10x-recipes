@@ -6,10 +6,7 @@ export const prerender = false;
 
 export const POST: APIRoute = async ({ request, locals }) => {
   try {
-    // Parse request body
     const body = await request.json();
-
-    // Validate input with Zod
     const parseResult = registerSchema.safeParse(body);
     if (!parseResult.success) {
       const fieldErrors = parseResult.error.flatten().fieldErrors;
@@ -30,15 +27,12 @@ export const POST: APIRoute = async ({ request, locals }) => {
     }
 
     const { email, password } = parseResult.data;
-
-    // Attempt to create user with Supabase Auth
     const { data, error } = await locals.supabase.auth.signUp({
       email,
       password,
     });
 
     if (error) {
-      // Handle specific error cases
       let message = "Unable to create account. Please try again.";
       let code = "REGISTRATION_ERROR";
 
@@ -62,7 +56,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
       );
     }
 
-    // Success - return user and session data
     return new Response(
       JSON.stringify({
         success: true,

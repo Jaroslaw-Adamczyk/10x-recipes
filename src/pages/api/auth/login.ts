@@ -6,10 +6,7 @@ export const prerender = false;
 
 export const POST: APIRoute = async ({ request, locals }) => {
   try {
-    // Parse request body
     const body = await request.json();
-
-    // Validate input with Zod
     const parseResult = loginSchema.safeParse(body);
     if (!parseResult.success) {
       const fieldErrors = parseResult.error.flatten().fieldErrors;
@@ -30,8 +27,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
     }
 
     const { email, password } = parseResult.data;
-
-    // Attempt login with Supabase Auth
     const { data, error } = await locals.supabase.auth.signInWithPassword({
       email,
       password,
@@ -69,7 +64,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
       );
     }
 
-    // Success - return user and session data
     return new Response(
       JSON.stringify({
         success: true,

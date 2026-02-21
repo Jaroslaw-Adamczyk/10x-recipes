@@ -49,11 +49,7 @@ export const listRecipes = async (
   }
 
   if (normalizedQuery) {
-    // We want to filter recipes that have at least one ingredient matching the query.
-    // In Supabase/PostgREST, filtering on a joined table (recipe_ingredients)
-    // using .ilike() only filters the joined rows, not the parent rows.
-    // To filter the parent rows (recipes), we need to use an inner join.
-    // We do this by adding !inner to the joined table name in the select.
+    // Use !inner so filtering on recipe_ingredients restricts to parent recipes.
     request = supabase
       .from("recipes")
       .select(
@@ -76,9 +72,7 @@ export const listRecipes = async (
     throw buildError("Failed to list recipes.");
   }
 
-  // If we filtered by ingredients, we might have duplicate recipes because of the inner join.
-  // Also, the recipe_ingredients only contains the MATCHING ingredients.
-  // We need to fetch ALL ingredients for these recipes to show the full preview.
+  // Inner join returns only matching ingredients; refetch for full preview.
   let recipesData = data ?? [];
   if (normalizedQuery && recipesData.length > 0) {
     const recipeIds = recipesData.map((r) => r.id);
