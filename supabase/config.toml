@@ -228,7 +228,7 @@ content_path = "./src/assets/email-templates/confirm-email.html"
 
 [auth.email.template.recovery]
 subject = "Reset your password"
-content_path = "./src/assets/email-templates/recovery.html"
+content_path = "./src/assets/email-templates/password-recovery.html"
 
 # Uncomment to customize email template
 # [auth.email.template.invite]
