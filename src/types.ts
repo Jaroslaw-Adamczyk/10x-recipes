@@ -7,6 +7,7 @@ type RecipeIngredient = Tables<"recipe_ingredients">;
 type RecipeStep = Tables<"recipe_steps">;
 type RecipeImport = Tables<"recipe_imports">;
 type RecipeRevision = Tables<"recipe_revisions">;
+type RecipeImage = Tables<"recipe_images">;
 type AuthEventLog = Tables<"auth_event_logs">;
 
 // DTOs
@@ -15,7 +16,12 @@ export type RecipeIngredientDto = RecipeIngredient;
 export type RecipeStepDto = RecipeStep;
 export type RecipeImportDto = Omit<RecipeImport, "user_id">;
 export type RecipeRevisionDto = RecipeRevision;
+export type RecipeImageDto = RecipeImage;
 export type AuthEventLogDto = AuthEventLog;
+
+export interface RecipeImageWithUrlDto extends RecipeImageDto {
+  url: string;
+}
 
 export type RecipeListItemDto = Pick<
   Recipe,
@@ -30,6 +36,7 @@ export interface RecipeDetailDto {
   ingredients: RecipeIngredientDto[];
   steps: RecipeStepDto[];
   import: RecipeImportDto | null;
+  recipe_images: RecipeImageDto[];
 }
 
 export interface RecipeCreateResultDto {

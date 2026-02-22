@@ -199,6 +199,38 @@ export interface Database {
           },
         ];
       };
+      recipe_images: {
+        Row: {
+          created_at: string;
+          id: string;
+          position: number;
+          recipe_id: string;
+          storage_path: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          position: number;
+          recipe_id: string;
+          storage_path: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          position?: number;
+          recipe_id?: string;
+          storage_path?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "recipe_images_recipe_id_fkey";
+            columns: ["recipe_id"];
+            isOneToOne: false;
+            referencedRelation: "recipes";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       recipes: {
         Row: {
           cook_time_minutes: number | null;

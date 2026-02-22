@@ -55,10 +55,18 @@ export const getRecipeDetail = async (
   const { recipe_ingredients, recipe_steps, recipe_imports, ...recipe } = data;
   const recipeImport = recipe_imports?.[0] ?? null;
 
+  const { data: recipeImages } = await supabase
+    .from("recipe_images")
+    .select("*")
+    .eq("recipe_id", recipeId)
+    .order("position", { ascending: true })
+    .order("created_at", { ascending: true });
+
   return {
     recipe,
     ingredients: recipe_ingredients ?? [],
     steps: recipe_steps ?? [],
     import: stripImportUserId(recipeImport),
+    recipe_images: recipeImages ?? [],
   };
 };
