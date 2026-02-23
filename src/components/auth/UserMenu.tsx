@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import type { User } from "@supabase/supabase-js";
 import { Button } from "../ui/button";
+import { apiClient } from "@/lib/apiClient";
 
 interface UserMenuProps {
   user: User;
@@ -15,22 +16,9 @@ export function UserMenu({ user }: UserMenuProps) {
     setIsLoggingOut(true);
 
     try {
-      const response = await fetch("/api/auth/logout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (response.ok) {
-        // Redirect to login page after successful logout
-        window.location.href = "/auth/login";
-      } else {
-        setIsLoggingOut(false);
-      }
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error("Logout error:", error);
+      await apiClient.post("/api/auth/logout");
+      window.location.href = "/auth/login";
+    } catch {
       setIsLoggingOut(false);
     }
   }, [isLoggingOut]);

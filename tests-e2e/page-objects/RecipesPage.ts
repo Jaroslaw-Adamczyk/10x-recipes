@@ -23,7 +23,7 @@ export class RecipesPage {
     this.clearButton = page.getByRole("button", { name: /clear/i });
     this.recipeList = page.getByTestId("recipe-list");
     this.recipeItems = page.getByTestId("recipe-item");
-    this.emptyState = page.locator(".border-dashed");
+    this.emptyState = page.getByTestId("recipes-empty-state");
     this.errorBanner = page.locator('[role="alert"]');
     this.addRecipeModal = new AddRecipeModal(page);
   }

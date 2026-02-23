@@ -1,6 +1,7 @@
 import { useCallback, useState, type Dispatch, type SetStateAction } from "react";
 import type { RecipeListItemDto } from "@/types";
 import type { RecipeListErrorViewModel } from "../types/recipeListTypes";
+import { apiClient, ApiError } from "@/lib/apiClient";
 
 interface UseRecipeDeleteProps {
   setItems: Dispatch<SetStateAction<RecipeListItemDto[]>>;
@@ -16,20 +17,19 @@ export const useRecipeDelete = ({ setItems, setError }: UseRecipeDeleteProps) =>
       setError(null);
       setIsDeleting(true);
       try {
-        const response = await fetch(`/api/recipes/${target.id}`, { method: "DELETE" });
-        if (!response.ok) {
-          if (response.status === 404) {
+        await apiClient.delete(`/api/recipes/${target.id}`);
+        setItems((current) => current.filter((item) => item.id !== target.id));
+      } catch (err) {
+        if (err instanceof ApiError) {
+          if (err.statusCode === 404) {
             setItems((current) => current.filter((item) => item.id !== target.id));
             setError({ message: "Recipe already removed.", statusCode: 404, context: "delete" });
             return;
           }
-          setError({ message: "Unable to delete recipe.", statusCode: response.status, context: "delete" });
-          return;
+          setError({ message: "Unable to delete recipe.", statusCode: err.statusCode, context: "delete" });
+        } else {
+          setError({ message: "Network error while deleting.", context: "delete" });
         }
-
-        setItems((current) => current.filter((item) => item.id !== target.id));
-      } catch {
-        setError({ message: "Network error while deleting.", context: "delete" });
       } finally {
         setIsDeleting(false);
       }

@@ -5,6 +5,7 @@ import * as z from "zod";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormField } from "./FormField";
 import { SubmitButton } from "./SubmitButton";
+import { apiClient, ApiError } from "@/lib/apiClient";
 
 const registerSchema = z
   .object({
@@ -43,41 +44,20 @@ export function RegisterForm() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: values.email,
-          password: values.password,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (data.error?.fields) {
-          // Map backend field errors to react-hook-form
-          Object.entries(data.error.fields).forEach(([field, message]) => {
-            setError(field as keyof RegisterFormValues, {
-              type: "manual",
-              message: message as string,
-            });
+      await apiClient.post("/api/auth/register", { email: values.email, password: values.password });
+      window.location.assign("/auth/registration-success");
+    } catch (err) {
+      if (err instanceof ApiError) {
+        const body = err.body as { error?: { fields?: Record<string, unknown>; message?: string } } | null;
+        if (body?.error?.fields) {
+          Object.entries(body.error.fields).forEach(([field, message]) => {
+            setError(field as keyof RegisterFormValues, { type: "manual", message: message as string });
           });
         }
-        setFormError(data.error?.message || "Unable to create account. Please try again.");
-
-        // Clear passwords on error
-        resetField("password");
-        resetField("confirmPassword");
-        setIsLoading(false);
-        return;
+        setFormError(body?.error?.message || "Unable to create account. Please try again.");
+      } else {
+        setFormError("Unable to create account. Please try again.");
       }
-
-      window.location.assign("/auth/registration-success");
-    } catch {
-      setFormError("Unable to create account. Please try again.");
       resetField("password");
       resetField("confirmPassword");
       setIsLoading(false);

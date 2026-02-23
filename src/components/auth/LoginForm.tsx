@@ -5,6 +5,7 @@ import * as z from "zod";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormField } from "./FormField";
 import { SubmitButton } from "./SubmitButton";
+import { apiClient, ApiError } from "@/lib/apiClient";
 
 const loginSchema = z.object({
   email: z.string().min(1, "Email is required").email("Please enter a valid email address"),
@@ -40,36 +41,21 @@ export function LoginForm({ redirectTo = "/", initialError }: LoginFormProps) {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(values),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        // Handle Zod array-based field errors from backend
-        if (data.error?.fields) {
-          Object.entries(data.error.fields).forEach(([key, value]) => {
+      await apiClient.post("/api/auth/login", values);
+      window.location.assign(redirectTo);
+    } catch (err) {
+      if (err instanceof ApiError) {
+        const body = err.body as { error?: { fields?: Record<string, unknown>; message?: string } } | null;
+        if (body?.error?.fields) {
+          Object.entries(body.error.fields).forEach(([key, value]) => {
             const message = Array.isArray(value) ? value[0] : value;
-            setError(key as keyof LoginFormValues, {
-              type: "manual",
-              message: message as string,
-            });
+            setError(key as keyof LoginFormValues, { type: "manual", message: message as string });
           });
         }
-        setFormError(data.error?.message || "Unable to connect. Please try again.");
-        setIsLoading(false);
-        return;
+        setFormError(body?.error?.message || "Unable to connect. Please try again.");
+      } else {
+        setFormError("Unable to connect. Please try again.");
       }
-
-      // Success - redirect to target page
-      window.location.assign(redirectTo);
-    } catch {
-      setFormError("Unable to connect. Please try again.");
       setIsLoading(false);
     }
   };

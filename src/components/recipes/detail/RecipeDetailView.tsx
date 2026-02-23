@@ -1,10 +1,11 @@
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import { DeleteConfirmationDialog } from "@/components/recipes/DeleteConfirmationDialog";
 import { EditRecipeModal } from "@/components/recipes/EditRecipeModal";
-import type { RecipeDetailDto, RecipeUpdateCommand, RecipeUpdateResultDto } from "@/types";
+import type { RecipeDetailDto, RecipeUpdateCommand } from "@/types";
 
 import { useRecipeDetail } from "../hooks/useRecipeDetail";
+import { useRecipeActions } from "../hooks/useRecipeActions";
 import { RecipeHeader } from "./RecipeHeader";
 import { RecipeIngredientsSection } from "./RecipeIngredientsSection";
 import { RecipeStepsSection } from "./RecipeStepsSection";
@@ -17,19 +18,24 @@ interface RecipeDetailViewProps {
   recipeId: string;
 }
 
-interface UpdateError {
-  message: string;
-  statusCode?: number;
-}
-
 const RecipeDetailView = ({ initialDetail, recipeId }: RecipeDetailViewProps) => {
   const { detail, setDetail, error, setError, viewModel, refresh } = useRecipeDetail(recipeId, initialDetail);
   const lastUpdateCommandRef = useRef<RecipeUpdateCommand | null>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [imagesRefreshKey, setImagesRefreshKey] = useState(0);
+
+  const {
+    isSaving,
+    isDeleting,
+    handleDeleteConfirmed,
+    handleUpdateSubmit: submitUpdate,
+  } = useRecipeActions({
+    recipeId,
+    setDetail,
+    setError,
+    onImagesUpdated: () => setImagesRefreshKey((k) => k + 1),
+  });
 
   const handleEdit = () => {
     setIsEditOpen(true);
@@ -40,89 +46,25 @@ const RecipeDetailView = ({ initialDetail, recipeId }: RecipeDetailViewProps) =>
       await handleDeleteConfirmed();
       return;
     }
-
     setIsDeleteOpen(true);
   };
 
-  const handleDeleteConfirmed = async () => {
-    setIsDeleting(true);
-    setError(null);
-
+  const handleDeleteConfirmedWithClose = useCallback(async () => {
     try {
-      const response = await fetch(`/api/recipes/${recipeId}`, { method: "DELETE" });
-      if (!response.ok) {
-        setError({ message: "Unable to delete recipe.", statusCode: response.status, context: "delete" });
-        return;
-      }
-
-      window.location.assign("/");
-    } catch {
-      setError({ message: "Network error while deleting.", context: "delete" });
+      await handleDeleteConfirmed();
     } finally {
-      setIsDeleting(false);
       setIsDeleteOpen(false);
     }
-  };
+  }, [handleDeleteConfirmed]);
 
-  const handleUpdateSubmit = async (command: RecipeUpdateCommand, imageFiles?: File[]) => {
-    setIsSaving(true);
-    setError(null);
-    lastUpdateCommandRef.current = command;
-
-    try {
-      const response = await fetch(`/api/recipes/${recipeId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(command),
-      });
-
-      if (!response.ok) {
-        if (response.status === 409) {
-          throw { message: "A recipe with this source URL already exists.", statusCode: 409 } as UpdateError;
-        }
-
-        setError({ message: "Unable to update recipe.", statusCode: response.status, context: "update" });
-        throw { message: "Unable to update recipe.", statusCode: response.status } as UpdateError;
-      }
-
-      const result = (await response.json()) as RecipeUpdateResultDto;
-      setDetail((current) => ({
-        recipe: result.recipe,
-        ingredients: result.ingredients,
-        steps: result.steps,
-        import: current.import,
-        recipe_images: current.recipe_images,
-      }));
-
-      if (imageFiles?.length) {
-        for (const file of imageFiles) {
-          const formData = new FormData();
-          formData.append("file", file);
-          const uploadRes = await fetch(`/api/recipes/${recipeId}/images`, {
-            method: "POST",
-            body: formData,
-          });
-          if (!uploadRes.ok) {
-            const data = (await uploadRes.json()) as { error?: string };
-            throw {
-              message: data.error ?? "Recipe updated but one or more photos failed to upload.",
-            } as UpdateError;
-          }
-        }
-        setImagesRefreshKey((k) => k + 1);
-      }
-
+  const handleUpdateSubmit = useCallback(
+    async (command: RecipeUpdateCommand, imageFiles?: File[]) => {
+      lastUpdateCommandRef.current = command;
+      await submitUpdate(command, imageFiles);
       setIsEditOpen(false);
-    } catch (error) {
-      const updateError = error as UpdateError | undefined;
-      if (!updateError?.statusCode) {
-        setError({ message: "Network error while updating.", context: "update" });
-      }
-      throw error;
-    } finally {
-      setIsSaving(false);
-    }
-  };
+    },
+    [submitUpdate]
+  );
 
   return (
     <TooltipProvider>
@@ -136,7 +78,7 @@ const RecipeDetailView = ({ initialDetail, recipeId }: RecipeDetailViewProps) =>
               ? () => handleUpdateSubmit(lastUpdateCommandRef.current as RecipeUpdateCommand)
               : undefined
           }
-          onRetryDelete={error?.context === "delete" ? handleDeleteConfirmed : undefined}
+          onRetryDelete={error?.context === "delete" ? handleDeleteConfirmedWithClose : undefined}
         />
         <RecipeHeader recipe={viewModel.recipe} onDelete={handleDelete} onEdit={handleEdit} />
         {/* <RecipeMetaPanel recipe={viewModel.recipe} importMeta={viewModel.importMeta} /> */}
@@ -156,7 +98,7 @@ const RecipeDetailView = ({ initialDetail, recipeId }: RecipeDetailViewProps) =>
         <DeleteConfirmationDialog
           open={isDeleteOpen}
           status={detail.recipe.status}
-          onConfirm={handleDeleteConfirmed}
+          onConfirm={handleDeleteConfirmedWithClose}
           onClose={() => setIsDeleteOpen(false)}
           isDeleting={isDeleting}
         />

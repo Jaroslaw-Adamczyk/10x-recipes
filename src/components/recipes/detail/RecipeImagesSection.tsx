@@ -9,6 +9,7 @@ import {
   CarouselPrevious,
   CarouselDots,
 } from "@/components/ui/carousel";
+import { apiClient, ApiError } from "@/lib/apiClient";
 
 interface RecipeImagesSectionProps {
   recipeId: string;
@@ -28,17 +29,14 @@ export const RecipeImagesSection = ({ recipeId, refreshKey = 0 }: RecipeImagesSe
       setError(null);
 
       try {
-        const response = await fetch(`/api/recipes/${recipeId}/images`);
-        if (!response.ok) {
-          const body = (await response.json().catch(() => null)) as { error?: string } | null;
-          setError(body?.error ?? "Unable to load images.");
-          return;
-        }
-
-        const data = (await response.json()) as RecipeImageWithUrlDto[];
+        const data = await apiClient.get<RecipeImageWithUrlDto[]>(`/api/recipes/${recipeId}/images`);
         setImages(data);
-      } catch {
-        setError("Network error while loading images.");
+      } catch (err) {
+        if (err instanceof ApiError) {
+          setError(err.message || "Unable to load images.");
+        } else {
+          setError("Network error while loading images.");
+        }
       } finally {
         setIsLoading(false);
       }

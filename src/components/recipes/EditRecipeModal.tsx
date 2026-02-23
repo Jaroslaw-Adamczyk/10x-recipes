@@ -17,6 +17,7 @@ import { StepListInput } from "@/components/recipes/StepListInput";
 import { recipeFormSchema, type RecipeFormValues } from "./utils/recipeFormSchema";
 import { normalizeIngredientName, normalizeText } from "./utils/recipeListUtils";
 import type { RecipeDetailDto, RecipeUpdateCommand, RecipeImageWithUrlDto } from "@/types";
+import { apiClient, ApiError } from "@/lib/apiClient";
 
 export const RECIPE_IMAGE_THUMBNAIL_SIZE = 198;
 export const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
@@ -107,31 +108,33 @@ export const EditRecipeModal = ({ open, initialRecipe, onSubmit, onClose, isSavi
     if (!open) return;
 
     const recipeId = initialRecipe.recipe.id;
-    let cancelled = false;
+    const controller = new AbortController();
 
     const loadImages = async () => {
       setExistingImagesLoading(true);
       setExistingImagesError(null);
       try {
-        const response = await fetch(`/api/recipes/${recipeId}/images?size=${RECIPE_IMAGE_THUMBNAIL_SIZE}`);
-        if (cancelled) return;
-        if (!response.ok) {
-          const body = (await response.json().catch(() => null)) as { error?: string } | null;
+        const data = await apiClient.get<RecipeImageWithUrlDto[]>(
+          `/api/recipes/${recipeId}/images?size=${RECIPE_IMAGE_THUMBNAIL_SIZE}`,
+          controller.signal
+        );
+        setExistingImages(data);
+      } catch (err) {
+        if (err instanceof Error && err.name === "AbortError") return;
+        if (err instanceof ApiError) {
+          const body = err.body as { error?: string } | null;
           setExistingImagesError(body?.error ?? "Unable to load images.");
-          return;
+        } else {
+          setExistingImagesError("Network error while loading images.");
         }
-        const data = (await response.json()) as RecipeImageWithUrlDto[];
-        if (!cancelled) setExistingImages(data);
-      } catch {
-        if (!cancelled) setExistingImagesError("Network error while loading images.");
       } finally {
-        if (!cancelled) setExistingImagesLoading(false);
+        if (!controller.signal.aborted) setExistingImagesLoading(false);
       }
     };
 
     void loadImages();
     return () => {
-      cancelled = true;
+      controller.abort();
     };
   }, [open, initialRecipe.recipe.id]);
 
@@ -140,15 +143,15 @@ export const EditRecipeModal = ({ open, initialRecipe, onSubmit, onClose, isSavi
       setExistingImagesError(null);
       const recipeId = initialRecipe.recipe.id;
       try {
-        const response = await fetch(`/api/recipes/${recipeId}/images/${imageId}`, { method: "DELETE" });
-        if (!response.ok) {
-          const body = (await response.json().catch(() => null)) as { error?: string } | null;
-          setExistingImagesError(body?.error ?? "Unable to delete photo.");
-          return;
-        }
+        await apiClient.delete(`/api/recipes/${recipeId}/images/${imageId}`);
         setExistingImages((prev) => prev.filter((img) => img.id !== imageId));
-      } catch {
-        setExistingImagesError("Network error while deleting photo.");
+      } catch (err) {
+        if (err instanceof ApiError) {
+          const body = err.body as { error?: string } | null;
+          setExistingImagesError(body?.error ?? "Unable to delete photo.");
+        } else {
+          setExistingImagesError("Network error while deleting photo.");
+        }
       }
     },
     [initialRecipe.recipe.id]

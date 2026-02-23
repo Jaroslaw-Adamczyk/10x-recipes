@@ -5,6 +5,7 @@ import * as z from "zod";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormField } from "./FormField";
 import { SubmitButton } from "./SubmitButton";
+import { apiClient, ApiError } from "@/lib/apiClient";
 
 const forgotPasswordSchema = z.object({
   email: z.string().min(1, "Email is required").email("Please enter a valid email address"),
@@ -31,23 +32,15 @@ export function ForgotPasswordForm() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/auth/reset-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setFormError(data.error?.message || "Unable to connect. Please try again.");
-        setIsLoading(false);
-        return;
-      }
-
+      await apiClient.post("/api/auth/reset-password", values);
       setIsSubmitted(true);
-    } catch {
-      setFormError("Unable to connect. Please try again.");
+    } catch (err) {
+      if (err instanceof ApiError) {
+        const body = err.body as { error?: { message?: string } } | null;
+        setFormError(body?.error?.message || "Unable to connect. Please try again.");
+      } else {
+        setFormError("Unable to connect. Please try again.");
+      }
       setIsLoading(false);
     }
   };

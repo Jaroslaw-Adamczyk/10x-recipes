@@ -5,6 +5,7 @@ import * as z from "zod";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormField } from "./FormField";
 import { SubmitButton } from "./SubmitButton";
+import { apiClient, ApiError } from "@/lib/apiClient";
 
 const resetPasswordSchema = z
   .object({
@@ -38,27 +39,15 @@ export function ResetPasswordForm() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/auth/reset-password-confirm", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          password: values.password,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setFormError(data.error?.message || "Unable to reset password. Please try again.");
-        resetField("password");
-        resetField("confirmPassword");
-        setIsLoading(false);
-        return;
-      }
-
+      await apiClient.post("/api/auth/reset-password-confirm", { password: values.password });
       setIsSuccess(true);
-    } catch {
-      setFormError("Unable to connect. Please try again.");
+    } catch (err) {
+      if (err instanceof ApiError) {
+        const body = err.body as { error?: { message?: string } } | null;
+        setFormError(body?.error?.message || "Unable to reset password. Please try again.");
+      } else {
+        setFormError("Unable to connect. Please try again.");
+      }
       resetField("password");
       resetField("confirmPassword");
       setIsLoading(false);

@@ -8,7 +8,7 @@ interface EmptyStateProps {
 export const EmptyState = ({ variant, onAdd }: EmptyStateProps) => (
   <div
     className="rounded-lg border border-dashed border-border bg-card p-6 text-center text-card-foreground"
-    data-testid="recipe-list"
+    data-testid="recipes-empty-state"
   >
     <h2 className="text-lg font-semibold">{variant === "no-recipes" ? "No recipes yet" : "No matching recipes"}</h2>
     <p className="mt-2 text-sm text-muted-foreground">

@@ -8,6 +8,7 @@ import type {
   RecipeStepDto,
 } from "@/types";
 import { formatCookTime, formatTimestamp } from "@/components/recipes/utils/formatters";
+import { apiClient, ApiError } from "@/lib/apiClient";
 
 export interface RecipeDetailViewModel {
   recipe: RecipeDto;
@@ -62,21 +63,18 @@ export const useRecipeDetail = (recipeId: string, initialDetail: RecipeDetailDto
     setError(null);
 
     try {
-      const response = await fetch(`/api/recipes/${recipeId}`);
-      if (!response.ok) {
-        if (response.status === 400 || response.status === 404) {
-          setError({ message: "Recipe not found.", statusCode: response.status, context: "load" });
+      const data = await apiClient.get<RecipeDetailDto>(`/api/recipes/${recipeId}`);
+      setDetail(data);
+    } catch (err) {
+      if (err instanceof ApiError) {
+        if (err.statusCode === 400 || err.statusCode === 404) {
+          setError({ message: "Recipe not found.", statusCode: err.statusCode, context: "load" });
           return;
         }
-
-        setError({ message: "Unable to refresh recipe details.", statusCode: response.status, context: "load" });
-        return;
+        setError({ message: "Unable to refresh recipe details.", statusCode: err.statusCode, context: "load" });
+      } else {
+        setError({ message: "Network error while refreshing.", context: "load" });
       }
-
-      const data = (await response.json()) as RecipeDetailDto;
-      setDetail(data);
-    } catch {
-      setError({ message: "Network error while refreshing.", context: "load" });
     } finally {
       setIsRefreshing(false);
     }

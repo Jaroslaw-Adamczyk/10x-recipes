@@ -51,8 +51,8 @@ export const RecipeRow = ({ item, onSelect, onDelete }: RecipeRowProps) => {
           </div>
           {item.ingredients_preview.length > 0 ? (
             <p className="mt-1 text-xs text-muted-foreground">
-              {item.ingredients_preview.slice(0, 5).join(", ")}
-              {item.ingredients_preview.length > 5 ? "..." : ""}
+              {item.ingredients_preview.slice(0, 8).join(", ")}
+              {item.ingredients_preview.length > 8 ? "..." : ""}
             </p>
           ) : (
             <p className="mt-1 text-xs text-muted-foreground">No ingredients preview yet.</p>

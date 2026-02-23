@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { RecipeListDto, RecipeListItemDto, RecipeListQuery } from "@/types";
 import type { RecipeListErrorViewModel } from "../types/recipeListTypes";
 import { buildListUrl, normalizeSearchQuery } from "../utils/recipeListUtils";
+import { apiClient, ApiError } from "@/lib/apiClient";
 import { useRecipeCreate } from "./useRecipeCreate";
 import { useRecipeDelete } from "./useRecipeDelete";
 import { useRecipeSearch } from "./useRecipeSearch";
@@ -53,26 +54,24 @@ export const useRecipeList = ({ initialList }: UseRecipeListProps) => {
       }
 
       try {
-        const response = await fetch(buildListUrl(nextQuery));
-        if (!response.ok) {
-          if (response.status === 400 && context === "search") {
-            setSearchError("Search query is not valid.");
-            return;
-          }
-          if (response.status === 401) {
-            setError({ message: "Please sign in to view recipes.", statusCode: 401, context });
-            return;
-          }
-          setError({ message: "Unable to load recipes right now.", statusCode: response.status, context });
-          return;
-        }
-
-        const data = (await response.json()) as RecipeListDto;
+        const data = await apiClient.get<RecipeListDto>(buildListUrl(nextQuery));
         setItems(data.data);
         setQuery(nextQuery);
         lastQueryRef.current = nextQuery;
-      } catch {
-        setError({ message: "Network error while loading recipes.", context });
+      } catch (err) {
+        if (err instanceof ApiError) {
+          if (err.statusCode === 400 && context === "search") {
+            setSearchError("Search query is not valid.");
+            return;
+          }
+          if (err.statusCode === 401) {
+            setError({ message: "Please sign in to view recipes.", statusCode: 401, context });
+            return;
+          }
+          setError({ message: "Unable to load recipes right now.", statusCode: err.statusCode, context });
+        } else {
+          setError({ message: "Network error while loading recipes.", context });
+        }
       } finally {
         if (mode === "load") {
           setIsLoading(false);
