@@ -4,11 +4,12 @@ import { DeleteConfirmationDialog } from "@/components/recipes/DeleteConfirmatio
 import { EditRecipeModal } from "@/components/recipes/EditRecipeModal";
 import type { RecipeDetailDto, RecipeUpdateCommand, RecipeUpdateResultDto } from "@/types";
 
-import { useRecipeDetail } from "./hooks/useRecipeDetail";
-import { RecipeHeader } from "./detail/RecipeHeader";
-import { RecipeIngredientsSection } from "./detail/RecipeIngredientsSection";
-import { RecipeStepsSection } from "./detail/RecipeStepsSection";
-import { ErrorBanner } from "./detail/ErrorBanner";
+import { useRecipeDetail } from "../hooks/useRecipeDetail";
+import { RecipeHeader } from "./RecipeHeader";
+import { RecipeIngredientsSection } from "./RecipeIngredientsSection";
+import { RecipeStepsSection } from "./RecipeStepsSection";
+import { RecipeImagesSection } from "./RecipeImagesSection";
+import { ErrorBanner } from "./ErrorBanner";
 import { TooltipProvider } from "@radix-ui/react-tooltip";
 
 interface RecipeDetailViewProps {
@@ -89,6 +90,7 @@ const RecipeDetailView = ({ initialDetail, recipeId }: RecipeDetailViewProps) =>
         ingredients: result.ingredients,
         steps: result.steps,
         import: current.import,
+        recipe_images: current.recipe_images,
       }));
       setIsEditOpen(false);
     } catch (error) {
@@ -118,6 +120,7 @@ const RecipeDetailView = ({ initialDetail, recipeId }: RecipeDetailViewProps) =>
         />
         <RecipeHeader recipe={viewModel.recipe} onDelete={handleDelete} onEdit={handleEdit} />
         {/* <RecipeMetaPanel recipe={viewModel.recipe} importMeta={viewModel.importMeta} /> */}
+        <RecipeImagesSection recipeId={recipeId} />
         <RecipeIngredientsSection ingredients={viewModel.ingredients} />
         <RecipeStepsSection steps={viewModel.steps} />
         <EditRecipeModal

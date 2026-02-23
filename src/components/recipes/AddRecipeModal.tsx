@@ -10,7 +10,7 @@ interface AddRecipeModalProps {
   onClose: () => void;
   isSubmitting: boolean;
   onImport: (command: RecipeImportCreateCommand) => Promise<void>;
-  onCreate: (command: RecipeCreateCommand) => Promise<void>;
+  onCreate: (command: RecipeCreateCommand, imageFiles?: File[]) => Promise<void>;
   importError?: string | null;
   createError?: string | null;
 }
@@ -83,7 +83,7 @@ export const AddRecipeModal = ({
             />
           ) : (
             <ManualRecipeForm
-              onSubmit={(command) => onCreate(command)}
+              onSubmit={(command, imageFiles) => onCreate(command, imageFiles)}
               onCancel={handleClose}
               isSubmitting={isSubmitting}
               error={createError}

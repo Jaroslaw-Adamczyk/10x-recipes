@@ -63,7 +63,7 @@ export const useRecipeCreate = ({ setItems, setError, onRefresh }: UseRecipeCrea
   );
 
   const handleCreate = useCallback(
-    async (command: RecipeCreateCommand) => {
+    async (command: RecipeCreateCommand, imageFiles?: File[]) => {
       setIsSubmitting(true);
       setImportError(null);
       setCreateError(null);
@@ -90,6 +90,24 @@ export const useRecipeCreate = ({ setItems, setError, onRefresh }: UseRecipeCrea
         }
 
         const result = (await response.json()) as RecipeCreateResultDto;
+        const recipeId = result.recipe.id;
+
+        if (imageFiles?.length) {
+          for (const file of imageFiles) {
+            const formData = new FormData();
+            formData.append("file", file);
+            const uploadRes = await fetch(`/api/recipes/${recipeId}/images`, {
+              method: "POST",
+              body: formData,
+            });
+            if (!uploadRes.ok) {
+              const data = (await uploadRes.json()) as { error?: string };
+              setCreateError(data.error ?? "Recipe created but one or more photos failed to upload.");
+              return;
+            }
+          }
+        }
+
         const preview = result.ingredients.map((ingredient) => ingredient.normalized_name);
         const listItem: RecipeListItemDto = {
           id: result.recipe.id,

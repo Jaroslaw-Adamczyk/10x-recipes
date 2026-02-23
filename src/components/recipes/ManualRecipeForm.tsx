@@ -1,6 +1,8 @@
-import { useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
+
 import { Button } from "@/components/ui/button";
 import type { RecipeCreateCommand } from "@/types";
 import { normalizeIngredientName, normalizeText } from "./utils/recipeListUtils";
@@ -8,8 +10,11 @@ import { recipeFormSchema, type RecipeFormValues } from "./utils/recipeFormSchem
 import { IngredientListInput } from "./IngredientListInput";
 import { StepListInput } from "./StepListInput";
 
+const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
+const IMAGE_ACCEPT = "image/jpeg,image/png";
+
 interface ManualRecipeFormProps {
-  onSubmit: (command: RecipeCreateCommand) => void;
+  onSubmit: (command: RecipeCreateCommand, imageFiles?: File[]) => void;
   onCancel: () => void;
   isSubmitting: boolean;
   error?: string | null;
@@ -17,6 +22,10 @@ interface ManualRecipeFormProps {
 }
 
 export const ManualRecipeForm = ({ onSubmit, onCancel, isSubmitting, error, onDirtyChange }: ManualRecipeFormProps) => {
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imageError, setImageError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const {
     register,
     control,
@@ -34,12 +43,43 @@ export const ManualRecipeForm = ({ onSubmit, onCancel, isSubmitting, error, onDi
   });
 
   useEffect(() => {
-    onDirtyChange(isDirty);
-  }, [isDirty, onDirtyChange]);
+    onDirtyChange(isDirty || imageFiles.length > 0);
+  }, [isDirty, imageFiles.length, onDirtyChange]);
+
+  const handleAddImageClick = useCallback(() => {
+    setImageError(null);
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleImageFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+      setImageError("File too large. Maximum size is 5MB.");
+      return;
+    }
+    setImageError(null);
+    setImageFiles((prev) => [...prev, file]);
+  }, []);
+
+  const removeImageFile = useCallback((index: number) => {
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+    setImageError(null);
+  }, []);
 
   useEffect(() => {
     requestAnimationFrame(() => setFocus("title"));
   }, [setFocus]);
+
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+
+  useEffect(() => {
+    const urls = imageFiles.map((file) => URL.createObjectURL(file));
+    setPreviewUrls(urls);
+    return () => urls.forEach(URL.revokeObjectURL);
+  }, [imageFiles]);
 
   const onFormSubmit = (data: RecipeFormValues) => {
     const ingredientItems = data.ingredients
@@ -61,13 +101,16 @@ export const ManualRecipeForm = ({ onSubmit, onCancel, isSubmitting, error, onDi
 
     const cookTimeValue = data.cookTime.trim() === "" ? null : Number(data.cookTime);
 
-    onSubmit({
-      title: normalizeText(data.title),
-      cook_time_minutes: cookTimeValue,
-      source_url: null,
-      ingredients: ingredientItems,
-      steps: stepItems,
-    });
+    onSubmit(
+      {
+        title: normalizeText(data.title),
+        cook_time_minutes: cookTimeValue,
+        source_url: null,
+        ingredients: ingredientItems,
+        steps: stepItems,
+      },
+      imageFiles.length > 0 ? imageFiles : undefined
+    );
   };
 
   return (
@@ -132,6 +175,58 @@ export const ManualRecipeForm = ({ onSubmit, onCancel, isSubmitting, error, onDi
         />
 
         {errors.cookTime ? <p className="text-xs text-destructive">{errors.cookTime.message}</p> : null}
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <div className="flex items-center justify-between gap-4">
+          <label className="text-sm font-medium text-foreground" htmlFor="manual-recipe-photos">
+            Recipe photos
+          </label>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleAddImageClick}
+            disabled={isSubmitting}
+            aria-label="Add photo"
+          >
+            <PlusIcon className="size-4" />
+            Add photo
+          </Button>
+        </div>
+        <input
+          id="manual-recipe-photos"
+          ref={fileInputRef}
+          type="file"
+          accept={IMAGE_ACCEPT}
+          className="sr-only"
+          aria-hidden
+          onChange={handleImageFileChange}
+        />
+        {imageError ? <p className="text-xs text-destructive">{imageError}</p> : null}
+        {imageFiles.length > 0 ? (
+          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4" data-testid="manual-form-image-previews">
+            {imageFiles.map((file, index) => (
+              <li
+                key={`${file.name}-${index}`}
+                className="relative aspect-square overflow-hidden rounded-md border border-border bg-muted"
+              >
+                {previewUrls[index] ? <img src={previewUrls[index]} alt="" className="size-full object-cover" /> : null}
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="icon"
+                  className="absolute right-1 top-1 size-7 opacity-90"
+                  aria-label="Remove photo"
+                  onClick={() => removeImageFile(index)}
+                  disabled={isSubmitting}
+                >
+                  <TrashIcon className="size-4" />
+                </Button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
       </div>
 
       {error ? (
