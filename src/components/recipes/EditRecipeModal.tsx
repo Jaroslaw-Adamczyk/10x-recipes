@@ -221,12 +221,14 @@ export const EditRecipeModal = ({ open, initialRecipe, onSubmit, onClose, isSavi
 
     try {
       await onSubmit(command, imageFiles.length > 0 ? imageFiles : undefined);
+      onClose();
     } catch (error) {
       const updateError = error as UpdateError | undefined;
       if (updateError?.statusCode === 409) {
         setSubmitError(updateError.message || "This recipe already exists.");
         return;
       }
+
       setSubmitError(updateError?.message ?? "Unable to update recipe. Please try again.");
     }
   };

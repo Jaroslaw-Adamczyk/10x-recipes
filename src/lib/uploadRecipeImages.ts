@@ -4,6 +4,6 @@ export async function uploadRecipeImages(recipeId: string, files: File[]): Promi
   for (const file of files) {
     const formData = new FormData();
     formData.append("file", file);
-    await apiClient.postForm<void>(`/api/recipes/${recipeId}/images`, formData);
+    await apiClient.postForm<undefined>(`/api/recipes/${recipeId}/images`, formData);
   }
 }
