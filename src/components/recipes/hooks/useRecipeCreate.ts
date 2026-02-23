@@ -118,6 +118,7 @@ export const useRecipeCreate = ({ setItems, setError, onRefresh }: UseRecipeCrea
           updated_at: result.recipe.updated_at,
           source_url: result.recipe.source_url,
           ingredients_preview: preview,
+          thumbnail_url: null,
         };
         setItems((current) => [listItem, ...current]);
         setIsAddOpen(false);

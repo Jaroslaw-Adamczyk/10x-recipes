@@ -3,6 +3,8 @@ import type { PostgrestError } from "@supabase/supabase-js";
 import type { SupabaseClient } from "../../../db/supabase.client";
 import type { RecipeDto, RecipeImportCreateCommand, RecipeImportDto } from "../../../types";
 
+import { extractRecipeData } from "./extractRecipeData";
+
 export interface RecipeImportCreateError {
   code: "CONFLICT" | "DATABASE";
   message: string;
@@ -12,6 +14,19 @@ interface RecipeImportCreateResult {
   recipe: RecipeDto;
   import: RecipeImportDto;
 }
+
+const BUCKET = "recipes-images";
+const FETCH_IMAGE_HEADERS = {
+  "User-Agent":
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+} as const;
+
+const ALLOWED_MIME = new Set(["image/jpeg", "image/png", "image/webp"]);
+const MIME_TO_EXT: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+};
 
 const isUniqueViolation = (error: PostgrestError) => error.code === "23505";
 const buildError = (message: string, code: RecipeImportCreateError["code"]): RecipeImportCreateError => ({
@@ -25,7 +40,49 @@ const stripImportUserId = (recipeImport: RecipeImportDto & { user_id?: string })
   return rest;
 };
 
-import { extractRecipeData } from "./extractRecipeData";
+function getExtension(mimetype: string): string | null {
+  const ext = MIME_TO_EXT[mimetype];
+  return ext ?? null;
+}
+
+async function fetchAndUploadRecipeImage(
+  supabase: SupabaseClient,
+  userId: string,
+  recipeId: string,
+  imageUrl: string,
+  position: number
+): Promise<void> {
+  const res = await fetch(imageUrl, { headers: FETCH_IMAGE_HEADERS });
+  if (!res.ok) {
+    throw new Error(`Failed to fetch image: ${res.status} ${res.statusText}`);
+  }
+  const contentType = res.headers.get("content-type")?.split(";")[0]?.trim().toLowerCase();
+  if (!contentType || !ALLOWED_MIME.has(contentType)) {
+    throw new Error(`Unsupported image type: ${contentType ?? "unknown"}`);
+  }
+  const ext = getExtension(contentType);
+  if (!ext) {
+    throw new Error(`No extension for type: ${contentType}`);
+  }
+  const buffer = await res.arrayBuffer();
+  const path = `${userId}/${recipeId}/import-${crypto.randomUUID()}.${ext}`;
+  const { error: uploadError } = await supabase.storage.from(BUCKET).upload(path, buffer, {
+    contentType,
+    upsert: false,
+  });
+  if (uploadError) {
+    throw new Error(`Storage upload failed: ${uploadError.message}`);
+  }
+  const { error: insertError } = await supabase.from("recipe_images").insert({
+    recipe_id: recipeId,
+    storage_path: path,
+    position,
+  });
+  if (insertError) {
+    await supabase.storage.from(BUCKET).remove([path]);
+    throw new Error(`DB insert failed: ${insertError.message}`);
+  }
+}
 
 type WaitUntil = (promise: Promise<unknown>) => void;
 
@@ -52,6 +109,7 @@ export const createRecipeImport = async (
     if (isUniqueViolation(recipeError)) {
       throw buildError("Recipe source_url already exists.", "CONFLICT");
     }
+    // eslint-disable-next-line no-console
     console.error("Failed to insert recipe placeholder", recipeError);
     throw buildError("Failed to create recipe placeholder.", "DATABASE");
   }
@@ -92,9 +150,7 @@ export const createRecipeImport = async (
       const html = await response.text();
 
       // Extract data using LLM
-      console.log("extracting data");
       const extracted = await extractRecipeData(html);
-      console.log(extracted);
 
       // Update recipe
       const { error: updateError } = await supabase
@@ -132,6 +188,19 @@ export const createRecipeImport = async (
           }))
         );
         if (stepError) throw stepError;
+      }
+
+      // Insert images: fetch each URL, upload to storage, insert recipe_images
+      const imageUrls = (extracted as { images?: string[] }).images ?? [];
+      for (let i = 0; i < imageUrls.length; i++) {
+        const url = imageUrls[i];
+        if (!url || typeof url !== "string") continue;
+        try {
+          await fetchAndUploadRecipeImage(supabase, userId, recipe.id, url, i);
+        } catch (imgErr) {
+          // eslint-disable-next-line no-console
+          console.warn(`Skipping recipe image ${i + 1}/${imageUrls.length} (${url}):`, imgErr);
+        }
       }
 
       // Update import record

@@ -2,6 +2,7 @@ import type { RecipeListItemDto } from "@/types";
 import { Button } from "@/components/ui/button";
 import { StatusIndicator } from "./StatusIndicator";
 import { SourceLink } from "./SourceLink";
+import { RECIPE_ROW_THUMBNAIL_SIZE } from "@/lib/services/recipes/listRecipes";
 
 interface RecipeRowProps {
   item: RecipeListItemDto;
@@ -27,8 +28,20 @@ export const RecipeRow = ({ item, onSelect, onDelete }: RecipeRowProps) => {
       className="group flex cursor-pointer flex-col gap-3 rounded-lg border border-border bg-card p-4 text-card-foreground transition hover:border-primary/40"
       data-testid="recipe-item"
     >
-      <div className="flex items-start justify-between gap-3">
-        <div>
+      <div className="flex items-center justify-between gap-3">
+        <div
+          className="flex shrink-0  items-center justify-center overflow-hidden rounded-md border border-border bg-muted"
+          style={{ width: RECIPE_ROW_THUMBNAIL_SIZE, height: RECIPE_ROW_THUMBNAIL_SIZE }}
+        >
+          {item.thumbnail_url ? (
+            <img src={item.thumbnail_url} alt="" className="size-full object-cover" />
+          ) : (
+            <span className="text-xs text-muted-foreground" aria-hidden>
+              No image
+            </span>
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <p className="text-base font-semibold text-foreground">{item.title}</p>
 
@@ -46,7 +59,7 @@ export const RecipeRow = ({ item, onSelect, onDelete }: RecipeRowProps) => {
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+        <div className="flex shrink-0 flex-wrap items-center gap-2 opacity-0 transition-opacity group-hover:opacity-100">
           <Button
             type="button"
             variant="destructive"

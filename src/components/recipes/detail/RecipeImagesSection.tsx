@@ -64,7 +64,7 @@ export const RecipeImagesSection = ({ recipeId, refreshKey = 0 }: RecipeImagesSe
           <CarouselContent className="items-stretch">
             {images.map((image) => (
               <CarouselItem key={image.id}>
-                <div className="relative flex max-h-80 w-full items-center justify-center overflow-hidden rounded-md">
+                <div className="relative flex max-h-[500px] w-full items-center justify-center overflow-hidden rounded-md">
                   <img src={image.url} alt="Recipe" className="h-full w-full object-contain" />
                 </div>
               </CarouselItem>

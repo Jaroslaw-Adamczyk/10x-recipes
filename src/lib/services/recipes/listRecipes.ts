@@ -8,6 +8,9 @@ export interface RecipeListError {
 
 const DEFAULT_SORT_COLUMN = "updated_at";
 const DEFAULT_SORT_DESC = true;
+export const RECIPE_ROW_THUMBNAIL_SIZE = 70;
+const THUMBNAIL_SIGNED_URL_EXPIRY_SEC = 300;
+const IMAGES_BUCKET = "recipes-images";
 
 const buildError = (message: string): RecipeListError => ({
   code: "DATABASE",
@@ -91,6 +94,36 @@ export const listRecipes = async (
     recipesData = fullData ?? [];
   }
 
+  const recipeIds = recipesData.map((r) => r.id);
+  const thumbnailMap = new Map<string, string>();
+
+  if (recipeIds.length > 0) {
+    const { data: imagesRows } = await supabase
+      .from("recipe_images")
+      .select("recipe_id, storage_path")
+      .in("recipe_id", recipeIds)
+      .order("position", { ascending: true });
+
+    const firstImagePerRecipe = new Map<string, string>();
+    for (const row of imagesRows ?? []) {
+      if (!firstImagePerRecipe.has(row.recipe_id)) {
+        firstImagePerRecipe.set(row.recipe_id, row.storage_path);
+      }
+    }
+
+    const transform = { width: RECIPE_ROW_THUMBNAIL_SIZE, height: RECIPE_ROW_THUMBNAIL_SIZE, resize: "cover" as const };
+    await Promise.all(
+      Array.from(firstImagePerRecipe.entries()).map(async ([rid, storagePath]) => {
+        const { data: signed } = await supabase.storage
+          .from(IMAGES_BUCKET)
+          .createSignedUrl(storagePath, THUMBNAIL_SIGNED_URL_EXPIRY_SEC, { transform });
+        if (signed?.signedUrl) {
+          thumbnailMap.set(rid, signed.signedUrl);
+        }
+      })
+    );
+  }
+
   const recipes = recipesData.map((item) => {
     const ingredientsPreview = buildIngredientsPreview(item.recipe_ingredients ?? []);
     const entry: RecipeListItemDto = {
@@ -102,6 +135,7 @@ export const listRecipes = async (
       updated_at: item.updated_at,
       source_url: item.source_url,
       ingredients_preview: ingredientsPreview,
+      thumbnail_url: thumbnailMap.get(item.id) ?? null,
     };
 
     return entry;

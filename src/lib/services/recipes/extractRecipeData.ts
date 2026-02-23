@@ -12,6 +12,7 @@ export interface ExtractedRecipe {
   steps: {
     step_text: string;
   }[];
+  images: string[];
 }
 
 const RECIPE_SCHEMA: JsonSchemaFormat = {
@@ -48,6 +49,10 @@ const RECIPE_SCHEMA: JsonSchemaFormat = {
             additionalProperties: false,
           },
         },
+        images: {
+          type: "array",
+          items: { type: "string" },
+        },
       },
       required: ["title", "cook_time_minutes", "prep_time_minutes", "ingredients", "steps"],
       additionalProperties: false,
@@ -77,7 +82,8 @@ export const extractRecipeData = async (content: string): Promise<ExtractedRecip
         "   - 'raw_text': The full line as found on the page (e.g., '2 tbsp extra virgin olive oil').\n" +
         "   - 'normalized_name': The simple name of the ingredient, lowercase, without quantities (e.g., 'olive oil').\n" +
         "4. **Steps**: Extract each instruction step separately. Do not hallucinate steps. \n" +
-        "5. **Cleanliness**: Remove any non-recipe content like ads, related posts, or site navigation.",
+        "5. **Images**: Extract the URLs of the images in the recipe. Don't pick random images from the page. Pick maximum 3 images. Only pick images that are relevant to the recipe. Prefer images that of the final dish. Only .jpg, .png images.\n" +
+        "6. **Cleanliness**: Remove any non-recipe content like ads, related posts, or site navigation.",
     },
     {
       role: "user",

@@ -36,7 +36,7 @@ export class OpenRouterService {
       max_tokens: params.max_tokens,
       response_format: params.response_format,
     });
-
+    console.log(response);
     const completion = response as OpenRouterResponse;
     const choice = completion.choices?.[0];
 

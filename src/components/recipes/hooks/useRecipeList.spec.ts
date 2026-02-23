@@ -14,6 +14,8 @@ const mockInitialList: RecipeListDto = {
       error_message: null,
       created_at: "",
       updated_at: "",
+      source_url: null,
+      thumbnail_url: null,
     },
   ],
   next_cursor: null,
@@ -95,6 +97,8 @@ describe("useRecipeList", () => {
       error_message: "Import failed",
       created_at: "",
       updated_at: "",
+      source_url: null,
+      thumbnail_url: null,
     };
 
     it("should delete failed recipes immediately without confirmation", async () => {
