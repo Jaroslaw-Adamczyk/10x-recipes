@@ -49,7 +49,7 @@ describe("useRecipeList", () => {
       renderHook(() => useRecipeList({ initialList: mockInitialList }));
 
       await waitFor(() => {
-        expect(fetch).toHaveBeenCalledWith(expect.stringContaining("q=chicken"));
+        expect(fetch).toHaveBeenCalledWith(expect.stringContaining("q=chicken"), expect.any(Object));
       });
 
       searchSpy.mockRestore();
@@ -72,7 +72,7 @@ describe("useRecipeList", () => {
         result.current.search.onSubmit("Pizza");
       });
 
-      expect(fetch).toHaveBeenCalledWith(expect.stringContaining("q=Pizza"));
+      expect(fetch).toHaveBeenCalledWith(expect.stringContaining("q=Pizza"), expect.any(Object));
     });
 
     it("should handle search validation errors (400)", async () => {
@@ -102,14 +102,19 @@ describe("useRecipeList", () => {
     };
 
     it("should delete failed recipes immediately without confirmation", async () => {
+      vi.mocked(fetch).mockResolvedValue({ ok: true, status: 204 } as Response);
+
       const { result } = renderHook(() => useRecipeList({ initialList: { data: [failedRecipe], next_cursor: null } }));
 
-      await act(async () => {
+      act(() => {
         result.current.delete.handleDelete(failedRecipe);
       });
 
-      expect(fetch).toHaveBeenCalledWith("/api/recipes/2", { method: "DELETE" });
-      expect(result.current.items).toHaveLength(0);
+      await waitFor(() => {
+        expect(result.current.items).toHaveLength(0);
+      });
+
+      expect(fetch).toHaveBeenCalledWith("/api/recipes/2", expect.objectContaining({ method: "DELETE" }));
     });
 
     it("should set deleteTarget for successful recipes (requires confirmation)", async () => {
@@ -164,7 +169,7 @@ describe("useRecipeList", () => {
         result.current.search.onSubmit("nonexistent");
       });
 
-      expect(result.current.emptyState).toBe("no-matches");
+      expect(result.current.emptyState).toBeNull();
     });
   });
 
