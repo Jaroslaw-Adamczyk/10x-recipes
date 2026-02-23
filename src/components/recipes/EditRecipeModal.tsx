@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -15,7 +16,11 @@ import { IngredientListInput } from "@/components/recipes/IngredientListInput";
 import { StepListInput } from "@/components/recipes/StepListInput";
 import { recipeFormSchema, type RecipeFormValues } from "./utils/recipeFormSchema";
 import { normalizeIngredientName, normalizeText } from "./utils/recipeListUtils";
-import type { RecipeDetailDto, RecipeUpdateCommand } from "@/types";
+import type { RecipeDetailDto, RecipeUpdateCommand, RecipeImageWithUrlDto } from "@/types";
+
+export const RECIPE_IMAGE_THUMBNAIL_SIZE = 198;
+export const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
+const IMAGE_ACCEPT = "image/jpeg,image/png";
 
 interface UpdateError {
   message: string;
@@ -25,7 +30,7 @@ interface UpdateError {
 export interface EditRecipeModalProps {
   open: boolean;
   initialRecipe: RecipeDetailDto;
-  onSubmit: (command: RecipeUpdateCommand) => Promise<void>;
+  onSubmit: (command: RecipeUpdateCommand, imageFiles?: File[]) => Promise<void>;
   onClose: () => void;
   isSaving: boolean;
 }
@@ -59,6 +64,13 @@ export const EditRecipeModal = ({ open, initialRecipe, onSubmit, onClose, isSavi
   const [ingredientDbIdMap, setIngredientDbIdMap] = useState(() => new Map<string, string>());
   const [stepDbIdMap, setStepDbIdMap] = useState(() => new Map<string, string>());
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imageError, setImageError] = useState<string | null>(null);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const [existingImages, setExistingImages] = useState<RecipeImageWithUrlDto[]>([]);
+  const [existingImagesLoading, setExistingImagesLoading] = useState(false);
+  const [existingImagesError, setExistingImagesError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
     register,
@@ -85,7 +97,91 @@ export const EditRecipeModal = ({ open, initialRecipe, onSubmit, onClose, isSavi
     setStepDbIdMap(stepMap);
     reset(values);
     setSubmitError(null);
+    setImageFiles([]);
+    setImageError(null);
+    setExistingImages([]);
+    setExistingImagesError(null);
   }, [open, initialRecipe, reset, setFocus]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const recipeId = initialRecipe.recipe.id;
+    let cancelled = false;
+
+    const loadImages = async () => {
+      setExistingImagesLoading(true);
+      setExistingImagesError(null);
+      try {
+        const response = await fetch(`/api/recipes/${recipeId}/images?size=${RECIPE_IMAGE_THUMBNAIL_SIZE}`);
+        if (cancelled) return;
+        if (!response.ok) {
+          const body = (await response.json().catch(() => null)) as { error?: string } | null;
+          setExistingImagesError(body?.error ?? "Unable to load images.");
+          return;
+        }
+        const data = (await response.json()) as RecipeImageWithUrlDto[];
+        if (!cancelled) setExistingImages(data);
+      } catch {
+        if (!cancelled) setExistingImagesError("Network error while loading images.");
+      } finally {
+        if (!cancelled) setExistingImagesLoading(false);
+      }
+    };
+
+    void loadImages();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, initialRecipe.recipe.id]);
+
+  const removeExistingImage = useCallback(
+    async (imageId: string) => {
+      setExistingImagesError(null);
+      const recipeId = initialRecipe.recipe.id;
+      try {
+        const response = await fetch(`/api/recipes/${recipeId}/images/${imageId}`, { method: "DELETE" });
+        if (!response.ok) {
+          const body = (await response.json().catch(() => null)) as { error?: string } | null;
+          setExistingImagesError(body?.error ?? "Unable to delete photo.");
+          return;
+        }
+        setExistingImages((prev) => prev.filter((img) => img.id !== imageId));
+      } catch {
+        setExistingImagesError("Network error while deleting photo.");
+      }
+    },
+    [initialRecipe.recipe.id]
+  );
+
+  const handleAddImageClick = useCallback(() => {
+    setImageError(null);
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleImageFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+      setImageError("File too large. Maximum size is 5MB.");
+      return;
+    }
+    setImageError(null);
+    setImageFiles((prev) => [...prev, file]);
+  }, []);
+
+  const removeImageFile = useCallback((index: number) => {
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+    setImageError(null);
+  }, []);
+
+  useEffect(() => {
+    const urls = imageFiles.map((file) => URL.createObjectURL(file));
+    setPreviewUrls(urls);
+    return () => urls.forEach(URL.revokeObjectURL);
+  }, [imageFiles]);
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) onClose();
@@ -121,7 +217,7 @@ export const EditRecipeModal = ({ open, initialRecipe, onSubmit, onClose, isSavi
     };
 
     try {
-      await onSubmit(command);
+      await onSubmit(command, imageFiles.length > 0 ? imageFiles : undefined);
     } catch (error) {
       const updateError = error as UpdateError | undefined;
       if (updateError?.statusCode === 409) {
@@ -191,6 +287,89 @@ export const EditRecipeModal = ({ open, initialRecipe, onSubmit, onClose, isSavi
               {...register("cookTime")}
             />
             {errors.cookTime ? <p className="text-xs text-destructive">{errors.cookTime.message}</p> : null}
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between gap-4">
+              <label className="text-sm font-medium text-foreground" htmlFor="edit-recipe-photos">
+                Recipe photos
+              </label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleAddImageClick}
+                disabled={isSaving}
+                aria-label="Add photo"
+              >
+                <PlusIcon className="size-4" />
+                Add photo
+              </Button>
+            </div>
+            <input
+              id="edit-recipe-photos"
+              ref={fileInputRef}
+              type="file"
+              accept={IMAGE_ACCEPT}
+              className="sr-only"
+              aria-hidden
+              onChange={handleImageFileChange}
+            />
+            {existingImagesLoading ? <p className="text-sm text-muted-foreground">Loading photos…</p> : null}
+            {existingImagesError ? <p className="text-xs text-destructive">{existingImagesError}</p> : null}
+            {imageError ? <p className="text-xs text-destructive">{imageError}</p> : null}
+            {existingImages.length > 0 || imageFiles.length > 0 ? (
+              <ul className="flex flex-wrap gap-3" data-testid="edit-form-image-previews">
+                {existingImages.map((image) => (
+                  <li
+                    key={image.id}
+                    className="group relative shrink-0 overflow-hidden rounded-md border border-border bg-muted"
+                    style={{
+                      width: RECIPE_IMAGE_THUMBNAIL_SIZE,
+                      height: RECIPE_IMAGE_THUMBNAIL_SIZE,
+                    }}
+                  >
+                    <img src={image.url} alt="" className="size-full object-cover" />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute right-1 top-1 size-7 opacity-0 transition-opacity group-hover:opacity-100"
+                      aria-label="Delete photo"
+                      onClick={() => removeExistingImage(image.id)}
+                      disabled={isSaving}
+                    >
+                      <TrashIcon className="size-4" />
+                    </Button>
+                  </li>
+                ))}
+                {imageFiles.map((file, index) => (
+                  <li
+                    key={`new-${file.name}-${index}`}
+                    className="group relative shrink-0 overflow-hidden rounded-md border border-border bg-muted"
+                    style={{
+                      width: RECIPE_IMAGE_THUMBNAIL_SIZE,
+                      height: RECIPE_IMAGE_THUMBNAIL_SIZE,
+                    }}
+                  >
+                    {previewUrls[index] ? (
+                      <img src={previewUrls[index]} alt="" className="size-full object-cover" />
+                    ) : null}
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute right-1 top-1 size-7 opacity-0 transition-opacity group-hover:opacity-100"
+                      aria-label="Remove photo"
+                      onClick={() => removeImageFile(index)}
+                      disabled={isSaving}
+                    >
+                      <TrashIcon className="size-4" />
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
           </div>
 
           {submitError ? (

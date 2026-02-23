@@ -23,7 +23,7 @@ const jsonResponse = (status: number, body: unknown) =>
     },
   });
 
-export const GET: APIRoute = async ({ locals, params }) => {
+export const GET: APIRoute = async ({ locals, params, url }) => {
   const supabase = locals.supabase;
   const { data, error } = await supabase.auth.getUser();
 
@@ -38,8 +38,20 @@ export const GET: APIRoute = async ({ locals, params }) => {
     });
   }
 
+  const sizeParam = url.searchParams.get("size");
+  let size: number | undefined;
+  if (sizeParam !== null) {
+    const sizeNumber = Number.parseInt(sizeParam, 10);
+    if (Number.isNaN(sizeNumber)) {
+      return jsonResponse(400, { error: "Invalid size." });
+    }
+    size = sizeNumber;
+  }
+
   try {
-    const images = await listRecipeImages(supabase, data.user.id, parsed.data.id);
+    const images = await listRecipeImages(supabase, data.user.id, parsed.data.id, {
+      size,
+    });
     return jsonResponse(200, images);
   } catch (err) {
     const listError = err as ListRecipeImagesError;

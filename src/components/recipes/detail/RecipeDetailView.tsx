@@ -29,6 +29,7 @@ const RecipeDetailView = ({ initialDetail, recipeId }: RecipeDetailViewProps) =>
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [imagesRefreshKey, setImagesRefreshKey] = useState(0);
 
   const handleEdit = () => {
     setIsEditOpen(true);
@@ -63,7 +64,7 @@ const RecipeDetailView = ({ initialDetail, recipeId }: RecipeDetailViewProps) =>
     }
   };
 
-  const handleUpdateSubmit = async (command: RecipeUpdateCommand) => {
+  const handleUpdateSubmit = async (command: RecipeUpdateCommand, imageFiles?: File[]) => {
     setIsSaving(true);
     setError(null);
     lastUpdateCommandRef.current = command;
@@ -92,6 +93,25 @@ const RecipeDetailView = ({ initialDetail, recipeId }: RecipeDetailViewProps) =>
         import: current.import,
         recipe_images: current.recipe_images,
       }));
+
+      if (imageFiles?.length) {
+        for (const file of imageFiles) {
+          const formData = new FormData();
+          formData.append("file", file);
+          const uploadRes = await fetch(`/api/recipes/${recipeId}/images`, {
+            method: "POST",
+            body: formData,
+          });
+          if (!uploadRes.ok) {
+            const data = (await uploadRes.json()) as { error?: string };
+            throw {
+              message: data.error ?? "Recipe updated but one or more photos failed to upload.",
+            } as UpdateError;
+          }
+        }
+        setImagesRefreshKey((k) => k + 1);
+      }
+
       setIsEditOpen(false);
     } catch (error) {
       const updateError = error as UpdateError | undefined;
@@ -120,14 +140,17 @@ const RecipeDetailView = ({ initialDetail, recipeId }: RecipeDetailViewProps) =>
         />
         <RecipeHeader recipe={viewModel.recipe} onDelete={handleDelete} onEdit={handleEdit} />
         {/* <RecipeMetaPanel recipe={viewModel.recipe} importMeta={viewModel.importMeta} /> */}
-        <RecipeImagesSection recipeId={recipeId} />
+        <RecipeImagesSection recipeId={recipeId} refreshKey={imagesRefreshKey} />
         <RecipeIngredientsSection ingredients={viewModel.ingredients} />
         <RecipeStepsSection steps={viewModel.steps} />
         <EditRecipeModal
           open={isEditOpen}
           initialRecipe={detail}
           onSubmit={handleUpdateSubmit}
-          onClose={() => setIsEditOpen(false)}
+          onClose={() => {
+            setIsEditOpen(false);
+            setImagesRefreshKey((k) => k + 1);
+          }}
           isSaving={isSaving}
         />
         <DeleteConfirmationDialog

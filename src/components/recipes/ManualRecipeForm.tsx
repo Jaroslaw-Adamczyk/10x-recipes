@@ -9,8 +9,8 @@ import { normalizeIngredientName, normalizeText } from "./utils/recipeListUtils"
 import { recipeFormSchema, type RecipeFormValues } from "./utils/recipeFormSchema";
 import { IngredientListInput } from "./IngredientListInput";
 import { StepListInput } from "./StepListInput";
+import { MAX_IMAGE_SIZE_BYTES } from "./EditRecipeModal";
 
-const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
 const IMAGE_ACCEPT = "image/jpeg,image/png";
 
 interface ManualRecipeFormProps {
@@ -209,7 +209,7 @@ export const ManualRecipeForm = ({ onSubmit, onCancel, isSubmitting, error, onDi
             {imageFiles.map((file, index) => (
               <li
                 key={`${file.name}-${index}`}
-                className="relative aspect-square overflow-hidden rounded-md border border-border bg-muted"
+                className="relative shrink-0 overflow-hidden rounded-md border border-border bg-muted"
               >
                 {previewUrls[index] ? <img src={previewUrls[index]} alt="" className="size-full object-cover" /> : null}
                 <Button

@@ -9,6 +9,10 @@ export interface ListRecipeImagesError {
   message: string;
 }
 
+export interface ListRecipeImagesOptions {
+  size?: number;
+}
+
 const buildError = (message: string, code: ListRecipeImagesError["code"]): ListRecipeImagesError => ({
   code,
   message,
@@ -17,7 +21,8 @@ const buildError = (message: string, code: ListRecipeImagesError["code"]): ListR
 export const listRecipeImages = async (
   supabase: SupabaseClient,
   userId: string,
-  recipeId: string
+  recipeId: string,
+  options?: ListRecipeImagesOptions
 ): Promise<RecipeImageWithUrlDto[]> => {
   const { data: recipe, error: recipeError } = await supabase
     .from("recipes")
@@ -47,11 +52,13 @@ export const listRecipeImages = async (
     return [];
   }
 
+  const transform = options?.size ? { width: options.size, height: options.size, resize: "cover" as const } : undefined;
+
   const withUrls: RecipeImageWithUrlDto[] = await Promise.all(
     rows.map(async (row) => {
       const { data: signed } = await supabase.storage
         .from(BUCKET)
-        .createSignedUrl(row.storage_path, SIGNED_URL_EXPIRY_SEC);
+        .createSignedUrl(row.storage_path, SIGNED_URL_EXPIRY_SEC, transform ? { transform } : {});
       return { ...row, url: signed?.signedUrl ?? "" };
     })
   );

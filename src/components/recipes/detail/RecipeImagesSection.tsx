@@ -12,9 +12,11 @@ import {
 
 interface RecipeImagesSectionProps {
   recipeId: string;
+  /** Increment to trigger a refetch (e.g. after adding images in edit modal). */
+  refreshKey?: number;
 }
 
-export const RecipeImagesSection = ({ recipeId }: RecipeImagesSectionProps) => {
+export const RecipeImagesSection = ({ recipeId, refreshKey = 0 }: RecipeImagesSectionProps) => {
   const [images, setImages] = useState<RecipeImageWithUrlDto[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -43,24 +45,26 @@ export const RecipeImagesSection = ({ recipeId }: RecipeImagesSectionProps) => {
     };
 
     void loadImages();
-  }, [recipeId]);
+  }, [recipeId, refreshKey]);
 
   const hasImages = images.length > 0;
+
+  if (!hasImages) {
+    return;
+  }
 
   return (
     <section>
       {error && <p className="text-sm text-destructive">{error}</p>}
 
-      {isLoading && !hasImages ? (
+      {isLoading ? (
         <p className="text-sm text-muted-foreground">Loading images…</p>
-      ) : !hasImages ? (
-        <p className="text-sm text-muted-foreground">No images yet. Upload your first image.</p>
       ) : (
         <Carousel className="relative w-full" opts={{ loop: true }}>
           <CarouselContent className="items-stretch">
             {images.map((image) => (
               <CarouselItem key={image.id}>
-                <div className="relative flex h-80 w-full items-center justify-center overflow-hidden rounded-md">
+                <div className="relative flex max-h-80 w-full items-center justify-center overflow-hidden rounded-md">
                   <img src={image.url} alt="Recipe" className="h-full w-full object-contain" />
                 </div>
               </CarouselItem>
