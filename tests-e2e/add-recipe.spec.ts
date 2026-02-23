@@ -58,7 +58,7 @@ test.describe("Add Recipe Flow", () => {
 
     // Modal should remain open and show error
     await recipesPage.addRecipeModal.expectModalToBeVisible();
-    await recipesPage.addRecipeModal.expectValidationError("Title is required");
+    await recipesPage.addRecipeModal.expectValidationError("title", "Title is required");
   });
 
   test("should show validation error when title is provided but ingredients are missing", async ({ recipesPage }) => {
@@ -73,7 +73,7 @@ test.describe("Add Recipe Flow", () => {
 
     // Should show validation error
     await recipesPage.addRecipeModal.expectModalToBeVisible();
-    await recipesPage.addRecipeModal.expectValidationError("Add at least one ingredient");
+    await recipesPage.addRecipeModal.expectValidationError("ingredients", "Add at least one ingredient");
   });
 
   test("should allow canceling recipe creation with dirty form", async ({ recipesPage }) => {

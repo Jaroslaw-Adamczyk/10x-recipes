@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
@@ -7,11 +7,10 @@ import { Button } from "@/components/ui/button";
 import type { RecipeCreateCommand } from "@/types";
 import { normalizeIngredientName, normalizeText } from "./utils/recipeListUtils";
 import { recipeFormSchema, type RecipeFormValues } from "./utils/recipeFormSchema";
+import { useRecipeImageFiles } from "./hooks/useRecipeImageFiles";
 import { IngredientListInput } from "./IngredientListInput";
 import { StepListInput } from "./StepListInput";
-import { MAX_IMAGE_SIZE_BYTES } from "./EditRecipeModal";
-
-const IMAGE_ACCEPT = "image/jpeg,image/png";
+import { IMAGE_ACCEPT } from "./constants/recipeImage";
 
 interface ManualRecipeFormProps {
   onSubmit: (command: RecipeCreateCommand, imageFiles?: File[]) => void;
@@ -22,9 +21,15 @@ interface ManualRecipeFormProps {
 }
 
 export const ManualRecipeForm = ({ onSubmit, onCancel, isSubmitting, error, onDirtyChange }: ManualRecipeFormProps) => {
-  const [imageFiles, setImageFiles] = useState<File[]>([]);
-  const [imageError, setImageError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const {
+    imageFiles,
+    imageError,
+    previewUrls,
+    fileInputRef,
+    handleAddImageClick,
+    handleImageFileChange,
+    removeImageFile,
+  } = useRecipeImageFiles();
 
   const {
     register,
@@ -46,40 +51,9 @@ export const ManualRecipeForm = ({ onSubmit, onCancel, isSubmitting, error, onDi
     onDirtyChange(isDirty || imageFiles.length > 0);
   }, [isDirty, imageFiles.length, onDirtyChange]);
 
-  const handleAddImageClick = useCallback(() => {
-    setImageError(null);
-    fileInputRef.current?.click();
-  }, []);
-
-  const handleImageFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file) return;
-
-    if (file.size > MAX_IMAGE_SIZE_BYTES) {
-      setImageError("File too large. Maximum size is 5MB.");
-      return;
-    }
-    setImageError(null);
-    setImageFiles((prev) => [...prev, file]);
-  }, []);
-
-  const removeImageFile = useCallback((index: number) => {
-    setImageFiles((prev) => prev.filter((_, i) => i !== index));
-    setImageError(null);
-  }, []);
-
   useEffect(() => {
     requestAnimationFrame(() => setFocus("title"));
   }, [setFocus]);
-
-  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
-
-  useEffect(() => {
-    const urls = imageFiles.map((file) => URL.createObjectURL(file));
-    setPreviewUrls(urls);
-    return () => urls.forEach(URL.revokeObjectURL);
-  }, [imageFiles]);
 
   const onFormSubmit = (data: RecipeFormValues) => {
     const ingredientItems = data.ingredients
@@ -131,7 +105,11 @@ export const ManualRecipeForm = ({ onSubmit, onCancel, isSubmitting, error, onDi
           {...register("title")}
         />
 
-        {errors.title ? <p className="text-xs text-destructive">{errors.title.message}</p> : null}
+        {errors.title ? (
+          <p className="text-xs text-destructive" data-testid="validation-error-title">
+            {errors.title.message}
+          </p>
+        ) : null}
       </div>
 
       <Controller
@@ -141,7 +119,11 @@ export const ManualRecipeForm = ({ onSubmit, onCancel, isSubmitting, error, onDi
           <div className="flex flex-col gap-1.5">
             <IngredientListInput ingredients={field.value} onChange={field.onChange} disabled={isSubmitting} />
 
-            {fieldState.error ? <p className="text-xs text-destructive">{fieldState.error.message}</p> : null}
+            {fieldState.error ? (
+              <p className="text-xs text-destructive" data-testid="validation-error-ingredients">
+                {fieldState.error.message}
+              </p>
+            ) : null}
           </div>
         )}
       />
@@ -153,7 +135,11 @@ export const ManualRecipeForm = ({ onSubmit, onCancel, isSubmitting, error, onDi
           <div className="flex flex-col gap-1.5">
             <StepListInput steps={field.value} onChange={field.onChange} disabled={isSubmitting} />
 
-            {fieldState.error ? <p className="text-xs text-destructive">{fieldState.error.message}</p> : null}
+            {fieldState.error ? (
+              <p className="text-xs text-destructive" data-testid="validation-error-steps">
+                {fieldState.error.message}
+              </p>
+            ) : null}
           </div>
         )}
       />
@@ -174,7 +160,11 @@ export const ManualRecipeForm = ({ onSubmit, onCancel, isSubmitting, error, onDi
           {...register("cookTime")}
         />
 
-        {errors.cookTime ? <p className="text-xs text-destructive">{errors.cookTime.message}</p> : null}
+        {errors.cookTime ? (
+          <p className="text-xs text-destructive" data-testid="validation-error-cooktime">
+            {errors.cookTime.message}
+          </p>
+        ) : null}
       </div>
 
       <div className="flex flex-col gap-1.5">
@@ -203,7 +193,11 @@ export const ManualRecipeForm = ({ onSubmit, onCancel, isSubmitting, error, onDi
           aria-hidden
           onChange={handleImageFileChange}
         />
-        {imageError ? <p className="text-xs text-destructive">{imageError}</p> : null}
+        {imageError ? (
+          <p className="text-xs text-destructive" data-testid="validation-error-images">
+            {imageError}
+          </p>
+        ) : null}
         {imageFiles.length > 0 ? (
           <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4" data-testid="manual-form-image-previews">
             {imageFiles.map((file, index) => (
@@ -230,7 +224,7 @@ export const ManualRecipeForm = ({ onSubmit, onCancel, isSubmitting, error, onDi
       </div>
 
       {error ? (
-        <p className="text-xs text-destructive" role="alert">
+        <p className="text-xs text-destructive" role="alert" data-testid="validation-error-form">
           {error}
         </p>
       ) : null}

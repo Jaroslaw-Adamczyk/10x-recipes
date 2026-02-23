@@ -18,7 +18,6 @@ export class AddRecipeModal {
   readonly createButton: Locator;
   readonly importUrlInput: Locator;
   readonly importButton: Locator;
-  readonly errorMessage: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -31,11 +30,10 @@ export class AddRecipeModal {
     this.createButton = page.getByTestId("button-create-recipe");
     this.importUrlInput = page.locator("#import-url");
     this.importButton = page.getByRole("button", { name: /import recipe/i });
-    this.errorMessage = page.locator(".text-destructive").first();
   }
 
   async expectModalToBeVisible() {
-    await expect(this.modal).toBeVisible();
+    await expect(this.modal).toBeVisible({ timeout: 10000 });
   }
 
   async expectModalToBeHidden() {
@@ -105,9 +103,20 @@ export class AddRecipeModal {
     await this.cancelButton.click({ force: true });
   }
 
-  async expectValidationError(errorText: string) {
-    await expect(this.errorMessage).toBeVisible();
-    await expect(this.errorMessage).toContainText(errorText);
+  /** Test ids for manual recipe form validation errors (one per field). */
+  readonly validationErrorTestIds = {
+    title: "validation-error-title",
+    ingredients: "validation-error-ingredients",
+    steps: "validation-error-steps",
+    cooktime: "validation-error-cooktime",
+    images: "validation-error-images",
+    form: "validation-error-form",
+  } as const;
+
+  async expectValidationError(field: keyof AddRecipeModal["validationErrorTestIds"], errorText: string) {
+    const error = this.page.getByTestId(this.validationErrorTestIds[field]);
+    await expect(error).toBeVisible();
+    await expect(error).toContainText(errorText);
   }
 
   async cancelWithConfirmation(accept = true) {

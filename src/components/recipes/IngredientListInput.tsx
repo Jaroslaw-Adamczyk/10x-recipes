@@ -54,6 +54,7 @@ export const IngredientListInput = ({ ingredients, onChange, disabled }: Ingredi
       <span className="text-sm font-medium text-foreground" id="ingredients-label">
         Ingredients
       </span>
+
       <div className="flex flex-col gap-2" role="group" aria-labelledby="ingredients-label">
         {ingredients.map((ing, index) => (
           <div key={ing.id} className="flex gap-2">

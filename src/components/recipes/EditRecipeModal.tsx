@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
@@ -12,16 +12,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { IngredientListInput } from "@/components/recipes/IngredientListInput";
-import { StepListInput } from "@/components/recipes/StepListInput";
 import { recipeFormSchema, type RecipeFormValues } from "./utils/recipeFormSchema";
 import { normalizeIngredientName, normalizeText } from "./utils/recipeListUtils";
 import type { RecipeDetailDto, RecipeUpdateCommand, RecipeImageWithUrlDto } from "@/types";
 import { apiClient, ApiError } from "@/lib/apiClient";
-
-export const RECIPE_IMAGE_THUMBNAIL_SIZE = 198;
-export const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
-const IMAGE_ACCEPT = "image/jpeg,image/png";
+import { useRecipeImageFiles } from "./hooks/useRecipeImageFiles";
+import { StepListInput } from "./StepListInput";
+import { IngredientListInput } from "./IngredientListInput";
+import { IMAGE_ACCEPT, RECIPE_IMAGE_THUMBNAIL_SIZE } from "./constants/recipeImage";
 
 interface UpdateError {
   message: string;
@@ -65,20 +63,26 @@ export const EditRecipeModal = ({ open, initialRecipe, onSubmit, onClose, isSavi
   const [ingredientDbIdMap, setIngredientDbIdMap] = useState(() => new Map<string, string>());
   const [stepDbIdMap, setStepDbIdMap] = useState(() => new Map<string, string>());
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [imageFiles, setImageFiles] = useState<File[]>([]);
-  const [imageError, setImageError] = useState<string | null>(null);
-  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [existingImages, setExistingImages] = useState<RecipeImageWithUrlDto[]>([]);
   const [existingImagesLoading, setExistingImagesLoading] = useState(false);
   const [existingImagesError, setExistingImagesError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const {
+    imageFiles,
+    imageError,
+    previewUrls,
+    fileInputRef,
+    handleAddImageClick,
+    handleImageFileChange,
+    removeImageFile,
+    reset: resetImageFiles,
+  } = useRecipeImageFiles();
 
   const {
     register,
     control,
     handleSubmit,
     reset,
-    setFocus,
     formState: { errors },
   } = useForm<RecipeFormValues>({
     resolver: zodResolver(recipeFormSchema),
@@ -98,11 +102,10 @@ export const EditRecipeModal = ({ open, initialRecipe, onSubmit, onClose, isSavi
     setStepDbIdMap(stepMap);
     reset(values);
     setSubmitError(null);
-    setImageFiles([]);
-    setImageError(null);
+    resetImageFiles();
     setExistingImages([]);
     setExistingImagesError(null);
-  }, [open, initialRecipe, reset, setFocus]);
+  }, [open, initialRecipe, reset, resetImageFiles]);
 
   useEffect(() => {
     if (!open) return;
@@ -157,35 +160,6 @@ export const EditRecipeModal = ({ open, initialRecipe, onSubmit, onClose, isSavi
     [initialRecipe.recipe.id]
   );
 
-  const handleAddImageClick = useCallback(() => {
-    setImageError(null);
-    fileInputRef.current?.click();
-  }, []);
-
-  const handleImageFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file) return;
-
-    if (file.size > MAX_IMAGE_SIZE_BYTES) {
-      setImageError("File too large. Maximum size is 5MB.");
-      return;
-    }
-    setImageError(null);
-    setImageFiles((prev) => [...prev, file]);
-  }, []);
-
-  const removeImageFile = useCallback((index: number) => {
-    setImageFiles((prev) => prev.filter((_, i) => i !== index));
-    setImageError(null);
-  }, []);
-
-  useEffect(() => {
-    const urls = imageFiles.map((file) => URL.createObjectURL(file));
-    setPreviewUrls(urls);
-    return () => urls.forEach(URL.revokeObjectURL);
-  }, [imageFiles]);
-
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) onClose();
   };
@@ -221,7 +195,6 @@ export const EditRecipeModal = ({ open, initialRecipe, onSubmit, onClose, isSavi
 
     try {
       await onSubmit(command, imageFiles.length > 0 ? imageFiles : undefined);
-      onClose();
     } catch (error) {
       const updateError = error as UpdateError | undefined;
       if (updateError?.statusCode === 409) {

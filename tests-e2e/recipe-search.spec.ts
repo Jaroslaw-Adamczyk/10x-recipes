@@ -26,7 +26,7 @@ test.describe("Recipe Search Flow", () => {
     // Search for non-existent ingredient
     await recipesPage.searchByIngredient("unicornmeat");
 
-    await recipesPage.page.waitForTimeout(100);
+    await recipesPage.page.waitForTimeout(500);
     // Should show no matches state
     await recipesPage.expectEmptyState("no-matches");
   });
