@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type RefObject } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -19,7 +18,8 @@ import { apiClient, ApiError } from "@/lib/apiClient";
 import { useRecipeImageFiles } from "./hooks/useRecipeImageFiles";
 import { StepListInput } from "./StepListInput";
 import { IngredientListInput } from "./IngredientListInput";
-import { IMAGE_ACCEPT, RECIPE_IMAGE_THUMBNAIL_SIZE } from "./constants/recipeImage";
+import { RECIPE_IMAGE_THUMBNAIL_SIZE } from "./constants/recipeImage";
+import { RecipeImagesInput } from "./RecipeImagesInput";
 
 interface UpdateError {
   message: string;
@@ -72,8 +72,8 @@ export const EditRecipeModal = ({ open, initialRecipe, onSubmit, onClose, isSavi
     imageError,
     previewUrls,
     fileInputRef,
-    handleAddImageClick,
     handleImageFileChange,
+    handleImageDrop,
     removeImageFile,
     reset: resetImageFiles,
   } = useRecipeImageFiles();
@@ -207,7 +207,7 @@ export const EditRecipeModal = ({ open, initialRecipe, onSubmit, onClose, isSavi
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange} modal>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-4xl">
         <DialogHeader>
           <DialogTitle>Edit recipe</DialogTitle>
@@ -233,7 +233,7 @@ export const EditRecipeModal = ({ open, initialRecipe, onSubmit, onClose, isSavi
             name="ingredients"
             control={control}
             render={({ field, fieldState }) => (
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-2">
                 <IngredientListInput ingredients={field.value} onChange={field.onChange} disabled={isSaving} />
                 {fieldState.error ? <p className="text-xs text-destructive">{fieldState.error.message}</p> : null}
               </div>
@@ -244,14 +244,14 @@ export const EditRecipeModal = ({ open, initialRecipe, onSubmit, onClose, isSavi
             name="steps"
             control={control}
             render={({ field, fieldState }) => (
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-2">
                 <StepListInput steps={field.value} onChange={field.onChange} disabled={isSaving} />
                 {fieldState.error ? <p className="text-xs text-destructive">{fieldState.error.message}</p> : null}
               </div>
             )}
           />
 
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-2">
             <label className="text-sm font-medium text-foreground" htmlFor="cook-time">
               Cook time (minutes)
             </label>
@@ -267,97 +267,32 @@ export const EditRecipeModal = ({ open, initialRecipe, onSubmit, onClose, isSavi
             {errors.cookTime ? <p className="text-xs text-destructive">{errors.cookTime.message}</p> : null}
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center justify-between gap-4">
-              <label className="text-sm font-medium text-foreground" htmlFor="edit-recipe-photos">
-                Recipe photos
-              </label>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleAddImageClick}
-                disabled={isSaving}
-                aria-label="Add photo"
-              >
-                <PlusIcon className="size-4" />
-                Add photo
-              </Button>
-            </div>
-            <input
-              id="edit-recipe-photos"
-              ref={fileInputRef}
-              type="file"
-              accept={IMAGE_ACCEPT}
-              className="sr-only"
-              aria-hidden
-              onChange={handleImageFileChange}
-            />
+          <div className="flex flex-col gap-2">
             {existingImagesLoading ? <p className="text-sm text-muted-foreground">Loading photos…</p> : null}
             {existingImagesError ? <p className="text-xs text-destructive">{existingImagesError}</p> : null}
-            {imageError ? <p className="text-xs text-destructive">{imageError}</p> : null}
-            {existingImages.length > 0 || imageFiles.length > 0 ? (
-              <ul className="flex flex-wrap gap-3" data-testid="edit-form-image-previews">
-                {existingImages.map((image) => (
-                  <li
-                    key={image.id}
-                    className="group relative shrink-0 overflow-hidden rounded-md border border-border bg-muted"
-                    style={{
-                      width: RECIPE_IMAGE_THUMBNAIL_SIZE,
-                      height: RECIPE_IMAGE_THUMBNAIL_SIZE,
-                    }}
-                  >
-                    <img src={image.url} alt="" className="size-full object-cover" />
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="icon"
-                      className="absolute right-1 top-1 size-7 opacity-0 transition-opacity group-hover:opacity-100"
-                      aria-label="Delete photo"
-                      onClick={() => removeExistingImage(image.id)}
-                      disabled={isSaving}
-                    >
-                      <TrashIcon className="size-4" />
-                    </Button>
-                  </li>
-                ))}
-                {imageFiles.map((file, index) => (
-                  <li
-                    key={`new-${file.name}-${index}`}
-                    className="group relative shrink-0 overflow-hidden rounded-md border border-border bg-muted"
-                    style={{
-                      width: RECIPE_IMAGE_THUMBNAIL_SIZE,
-                      height: RECIPE_IMAGE_THUMBNAIL_SIZE,
-                    }}
-                  >
-                    {previewUrls[index] ? (
-                      <img src={previewUrls[index]} alt="" className="size-full object-cover" />
-                    ) : null}
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="icon"
-                      className="absolute right-1 top-1 size-7 opacity-0 transition-opacity group-hover:opacity-100"
-                      aria-label="Remove photo"
-                      onClick={() => removeImageFile(index)}
-                      disabled={isSaving}
-                    >
-                      <TrashIcon className="size-4" />
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
+            <RecipeImagesInput
+              imageFiles={imageFiles}
+              imageError={imageError}
+              previewUrls={previewUrls}
+              fileInputRef={fileInputRef as RefObject<HTMLInputElement>}
+              isSubmitting={isSaving}
+              handleImageFileChange={handleImageFileChange}
+              handleImageDrop={handleImageDrop}
+              removeImageFile={removeImageFile}
+              existingImages={existingImages.map(({ id, url }) => ({ id, url }))}
+              onRemoveExistingImage={removeExistingImage}
+              label="Recipe photos"
+            />
           </div>
 
-          {submitError ? (
+          {submitError && (
             <p
               className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive"
               role="alert"
             >
               {submitError}
             </p>
-          ) : null}
+          )}
 
           <DialogFooter className="mt-2">
             <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>

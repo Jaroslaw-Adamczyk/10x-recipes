@@ -9,23 +9,43 @@ export function useRecipeImageFiles() {
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const addFiles = useCallback((files: FileList | File[]) => {
+    const incomingFiles = Array.from(files);
+    if (incomingFiles.length === 0) {
+      return;
+    }
+
+    const tooLargeFile = incomingFiles.find((file) => file.size > MAX_IMAGE_SIZE_BYTES);
+    if (tooLargeFile) {
+      setImageError(IMAGE_SIZE_ERROR);
+      return;
+    }
+    setImageError(null);
+    setImageFiles((prev) => [...prev, ...incomingFiles]);
+  }, []);
+
   const handleAddImageClick = useCallback(() => {
     setImageError(null);
     fileInputRef.current?.click();
   }, []);
 
-  const handleImageFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file) return;
+  const handleImageFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = e.target.files;
+      if (!files?.length) return;
 
-    if (file.size > MAX_IMAGE_SIZE_BYTES) {
-      setImageError(IMAGE_SIZE_ERROR);
-      return;
-    }
-    setImageError(null);
-    setImageFiles((prev) => [...prev, file]);
-  }, []);
+      addFiles(files);
+      e.target.value = "";
+    },
+    [addFiles]
+  );
+
+  const handleImageDrop = useCallback(
+    (files: FileList | File[]) => {
+      addFiles(files);
+    },
+    [addFiles]
+  );
 
   const removeImageFile = useCallback((index: number) => {
     setImageFiles((prev) => prev.filter((_, i) => i !== index));
@@ -50,6 +70,7 @@ export function useRecipeImageFiles() {
     fileInputRef,
     handleAddImageClick,
     handleImageFileChange,
+    handleImageDrop,
     removeImageFile,
     setImageError,
     reset,
