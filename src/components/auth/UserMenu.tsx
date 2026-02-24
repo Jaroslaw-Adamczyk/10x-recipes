@@ -25,9 +25,9 @@ export function UserMenu({ user }: UserMenuProps) {
 
   return (
     <div className="flex w-full items-center justify-between gap-4">
-      <h1 className="text-xl font-semibold text-gray-900">
-        <a href="/" className="flex items-center gap-2 hover:text-gray-700 transition-colors">
-          <img src="/chiefStack.svg" alt="ChiefStack Logo" className="h-8 w-8" />
+      <h1 className="text-xl font-semibold text-foreground">
+        <a href="/recipes" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
+          <img src="/chiefStack.svg" alt="" className="h-8 w-8 shrink-0" />
           ChiefStack
         </a>
       </h1>

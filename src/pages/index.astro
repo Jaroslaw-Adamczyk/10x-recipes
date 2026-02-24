@@ -1,50 +1,180 @@
 ---
-import { z } from "zod";
-
 import Layout from "../layouts/Layout.astro";
-import RecipeListView from "../components/recipes/RecipeListView";
-import type { RecipeListDto, RecipeListQuery } from "../types";
 
-const statusSchema = z.enum(["processing", "succeeded", "failed"]);
-const rawQuery = Astro.url.searchParams.get("q") ?? "";
-const rawStatus = Astro.url.searchParams.get("status") ?? "";
-
-const query: RecipeListQuery = {};
-const normalizedQuery = rawQuery.trim().toLowerCase();
-
-if (normalizedQuery) {
-  query.q = normalizedQuery;
+const user = Astro.locals.user;
+if (user) {
+  return Astro.redirect("/recipes");
 }
 
-const statusResult = statusSchema.safeParse(rawStatus);
-if (statusResult.success) {
-  query.status = statusResult.data;
-}
-
-const listUrl = new URL("/api/recipes", Astro.url);
-if (query.q) {
-  listUrl.searchParams.set("q", query.q);
-}
-if (query.status) {
-  listUrl.searchParams.set("status", query.status);
-}
-
-let initialList: RecipeListDto = { data: [], next_cursor: null };
-
-try {
-  const response = await fetch(listUrl, {
-    headers: {
-      cookie: Astro.request.headers.get("cookie") ?? "",
-    },
-  });
-  if (response.ok) {
-    initialList = (await response.json()) as RecipeListDto;
-  }
-} catch {
-  // Fall back to empty list; errors handled client-side.
-}
+const registerUrl = "/auth/register?redirectTo=%2Frecipes";
+const loginUrl = "/auth/login?redirectTo=%2Frecipes";
 ---
 
-<Layout title="Recipes">
-  <RecipeListView initialList={initialList} client:load />
+<Layout title="ChiefStack" description="Save, organize and discover recipes from the web or add your own.">
+  <!-- Full-page background (fixed so it covers viewport edge to edge) -->
+  <div
+    class="fixed inset-0 z-0 bg-cover bg-center bg-no-repeat"
+    style="background-image: url('/chiefstack-hero.png');"
+    aria-hidden="true"
+  >
+  </div>
+  <div class="fixed inset-0 z-0 bg-background/85" aria-hidden="true"></div>
+
+  <div class="relative z-10 mx-auto max-w-3xl space-y-20">
+    <!-- Global nav -->
+    <nav class="flex items-center justify-between" aria-label="Main">
+      <a href="/" class="flex items-center gap-2 text-foreground hover:opacity-90">
+        <img src="/chiefStack.svg" alt="" class="h-9 w-9 md:h-10 md:w-10" width="40" height="40" />
+        <span class="text-xl font-semibold tracking-tight md:text-2xl">ChiefStack</span>
+      </a>
+      <a
+        href={loginUrl}
+        class="text-sm font-medium text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded px-3 py-2"
+      >
+        Sign in
+      </a>
+    </nav>
+
+    <!-- Hero -->
+    <section class="space-y-6 text-center">
+      <h1 class="text-4xl font-semibold tracking-tight text-foreground md:text-5xl">Your recipes, one place.</h1>
+      <p class="text-lg text-muted-foreground">
+        Stop losing recipes in tabs and notes. Save, import, and search your entire collection in seconds.
+      </p>
+      <div class="flex flex-wrap items-center justify-center gap-4 pt-2">
+        <a
+          href={registerUrl}
+          class="inline-flex items-center justify-center rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          Get started — free
+        </a>
+        <a
+          href={loginUrl}
+          class="inline-flex items-center justify-center rounded-md border border-input bg-background px-5 py-2.5 text-sm font-medium text-foreground shadow-sm hover:bg-muted hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          Sign in
+        </a>
+      </div>
+      <p class="text-xs text-muted-foreground">No credit card required · Import your first recipe in under a minute</p>
+    </section>
+
+    <!-- How it works -->
+    <section class="space-y-8">
+      <h2 class="text-2xl font-semibold text-foreground text-center">How ChiefStack works</h2>
+      <div class="grid gap-8 md:grid-cols-3">
+        <div class="flex flex-col gap-2 rounded-lg border border-border bg-card p-6 text-card-foreground">
+          <span class="text-sm font-medium text-primary">Step 1</span>
+          <h3 class="font-medium text-foreground">Paste a recipe link</h3>
+          <p class="text-sm text-muted-foreground">
+            Paste a URL from sites like AllRecipes, BBC Good Food, or your favorite blogs.
+          </p>
+        </div>
+        <div class="flex flex-col gap-2 rounded-lg border border-border bg-card p-6 text-card-foreground">
+          <span class="text-sm font-medium text-primary">Step 2</span>
+          <h3 class="font-medium text-foreground">We extract the details</h3>
+          <p class="text-sm text-muted-foreground">
+            Ingredients and steps are pulled out automatically so you don't have to copy-paste.
+          </p>
+        </div>
+        <div class="flex flex-col gap-2 rounded-lg border border-border bg-card p-6 text-card-foreground">
+          <span class="text-sm font-medium text-primary">Step 3</span>
+          <h3 class="font-medium text-foreground">Save and organize</h3>
+          <p class="text-sm text-muted-foreground">Edit, add photos, and keep it searchable in your own collection.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Why ChiefStack -->
+    <section class="space-y-8">
+      <h2 class="text-2xl font-semibold text-foreground text-center">Why home cooks use ChiefStack</h2>
+      <div class="grid gap-8 md:grid-cols-3">
+        <div class="flex flex-col gap-2 rounded-lg border border-border bg-card p-6 text-card-foreground">
+          <h3 class="font-medium text-foreground">Import from the web</h3>
+          <p class="text-sm text-muted-foreground">
+            Works with most recipe sites—paste a link and save. We extract ingredients and steps so you can edit them in
+            one place.
+          </p>
+        </div>
+        <div class="flex flex-col gap-2 rounded-lg border border-border bg-card p-6 text-card-foreground">
+          <h3 class="font-medium text-foreground">Capture your own recipes</h3>
+          <p class="text-sm text-muted-foreground">
+            Type in recipes, add photos, and keep family favorites and personal notes with full control.
+          </p>
+        </div>
+        <div class="flex flex-col gap-2 rounded-lg border border-border bg-card p-6 text-card-foreground">
+          <h3 class="font-medium text-foreground">Search and organize everything</h3>
+          <p class="text-sm text-muted-foreground">
+            Find recipes by name, ingredient, or tag. See import status and cooking time at a glance.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Trust / FAQ strip -->
+    <section class="rounded-lg border border-border bg-card p-6 md:p-8">
+      <h2 class="text-center text-lg font-semibold text-foreground mb-6">Common asked questions</h2>
+      <div class="space-y-2 max-w-xl mx-auto">
+        <details class="group rounded-lg border border-border bg-background overflow-hidden">
+          <summary
+            class="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 font-medium text-foreground hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden"
+          >
+            Is it free?
+            <span class="size-5 shrink-0 transition-transform group-open:rotate-180" aria-hidden="true">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="m6 9 6 6 6-6"></path>
+              </svg>
+            </span>
+          </summary>
+          <div class="px-4 p-3 text-sm text-muted-foreground">
+            Yes. Start for free and keep your recipes in one place. No credit card required.
+          </div>
+        </details>
+        <details class="group rounded-lg border border-border bg-background overflow-hidden">
+          <summary
+            class="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 font-medium text-foreground hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden"
+          >
+            What happens to my data?
+            <span class="size-5 shrink-0 transition-transform group-open:rotate-180" aria-hidden="true">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="m6 9 6 6 6-6"></path>
+              </svg>
+            </span>
+          </summary>
+          <div class="px-4 p-3 text-sm text-muted-foreground">
+            Your recipes belong to you. We don't sell your data. Import and export whenever you like.
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- Final CTA -->
+    <section class="space-y-4 pt-4 text-center">
+      <p class="text-muted-foreground">Ready to organize your recipes?</p>
+      <a
+        href={registerUrl}
+        class="inline-flex items-center justify-center rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        Get started
+      </a>
+      <p class="text-sm text-muted-foreground">
+        Already have an account? <a href={loginUrl} class="text-foreground underline hover:no-underline">Sign in</a>
+      </p>
+    </section>
+  </div>
 </Layout>

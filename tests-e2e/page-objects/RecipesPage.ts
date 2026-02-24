@@ -29,11 +29,11 @@ export class RecipesPage {
   }
 
   async goto() {
-    await this.page.goto("/");
+    await this.page.goto("/recipes");
   }
 
   async expectToBeOnRecipesPage() {
-    await expect(this.page).toHaveURL("/");
+    await expect(this.page).toHaveURL("/recipes");
     await expect(this.page).toHaveTitle(/Recipes/);
     await expect(this.addRecipeButton).toBeVisible();
     await expect(this.recipeList).toBeVisible();

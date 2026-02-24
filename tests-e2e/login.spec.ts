@@ -10,7 +10,7 @@ test.describe("Login Flow", () => {
     await loginPage.expectToBeOnLoginPage();
 
     await loginPage.login(TEST_USER.email, TEST_USER.password);
-    await loginPage.waitForRedirect("/");
+    await loginPage.waitForRedirect("/recipes");
 
     await recipesPage.expectToBeOnRecipesPage();
   });

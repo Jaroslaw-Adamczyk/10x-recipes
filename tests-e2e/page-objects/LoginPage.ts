@@ -28,14 +28,13 @@ export class LoginPage {
     await this.emailInput.fill(email);
     await this.passwordInput.fill(password);
     await this.submitButton.click();
-    // Wait for either redirect to home or an error message to appear
     await Promise.race([
-      this.page.waitForURL("/", { timeout: 5000 }).catch(),
+      this.page.waitForURL("/recipes", { timeout: 5000 }).catch(),
       this.formError.waitFor({ state: "visible", timeout: 5000 }).catch(),
     ]);
   }
 
-  async waitForRedirect(url = "/") {
+  async waitForRedirect(url = "/recipes") {
     await this.page.waitForURL(url);
   }
 

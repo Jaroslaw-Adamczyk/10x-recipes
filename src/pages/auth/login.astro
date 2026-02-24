@@ -3,7 +3,7 @@ import Layout from "@/layouts/Layout.astro";
 import { LoginForm } from "@/components/auth/LoginForm";
 
 // Get query parameters
-const redirectTo = Astro.url.searchParams.get("redirectTo") || "/";
+const redirectTo = Astro.url.searchParams.get("redirectTo") || "/recipes";
 const error = Astro.url.searchParams.get("error") || undefined;
 
 // Check if user is already authenticated

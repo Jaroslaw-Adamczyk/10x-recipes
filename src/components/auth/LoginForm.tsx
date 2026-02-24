@@ -19,7 +19,7 @@ interface LoginFormProps {
   initialError?: string;
 }
 
-export function LoginForm({ redirectTo = "/", initialError }: LoginFormProps) {
+export function LoginForm({ redirectTo = "/recipes", initialError }: LoginFormProps) {
   const [formError, setFormError] = React.useState(initialError || "");
   const [isLoading, setIsLoading] = React.useState(false);
 
